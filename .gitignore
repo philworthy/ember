@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 data/
+captures/
 *.db
 *.db-*
 *.log

@@ -42,4 +42,10 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
 
 ## Commands
 
-_To be filled in during milestone 0 (install, dev, test, simulator, build, deploy)._
+- `npm install` — install all workspaces (`shared/`, `server/`, `client/`)
+- `npm run dev` — server (`tsx watch`, port `EMBER_PORT`, default 8080) + Vite on 5173, which
+  proxies `/api` and `/healthz` to the server
+- `npm test` / `npm run test:watch` — Vitest across `shared/`, `server/`, `scripts/`
+- `npm run lint` (Biome; `npm run format` to fix) and `npm run typecheck`
+- `npm run build` — builds `client/dist`, which the server serves in production
+- Simulator: milestone 2. Deploy: milestone 5.

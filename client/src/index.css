@@ -1,0 +1,29 @@
+/* Design tokens from design/README.md */
+:root {
+  --bg: #0c0d0e;
+  --surface: #16181a;
+  --surface-2: #1f2225;
+  --line: #26292c;
+  --text: #f3f1ed;
+  --text-2: #a3a09a;
+  --text-3: #7d7a75;
+  --pit: #ff7a3d;
+  --p1: #f4cf63;
+  --p2: #5aa9f8;
+  --p3: #c59cff;
+  --ok: #5fd08a;
+  --warn-bg: #2a1a14;
+  --warn-fg: #ff9a6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Geist, -apple-system, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
