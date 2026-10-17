@@ -14,12 +14,14 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "typecheck": "tsc --noEmit -p server && tsc --noEmit -p shared && npm run typecheck --workspace client",
-    "build": "npm run build --workspace client"
+    "typecheck": "tsc --noEmit -p server && tsc --noEmit -p shared && tsc --noEmit -p scripts && npm run typecheck --workspace client",
+    "build": "npm run build --workspace client",
+    "device": "tsx scripts/device.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@types/node": "^26.6.5",
+    "commander": "^15.0.0",
     "concurrently": "^10.0.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",

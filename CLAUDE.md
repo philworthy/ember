@@ -48,4 +48,6 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
 - `npm test` / `npm run test:watch` — Vitest across `shared/`, `server/`, `scripts/`
 - `npm run lint` (Biome; `npm run format` to fix) and `npm run typecheck`
 - `npm run build` — builds `client/dist`, which the server serves in production
+- `npm run device -- <cmd>` — real-device CLI (`scripts/device.ts`); needs `IKAMAND_HOST`.
+  `npm run device -- --help` lists commands; `docs/m1-runbook.md` is the test order
 - Simulator: milestone 2. Deploy: milestone 5.
