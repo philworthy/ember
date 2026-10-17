@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — choose food</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 16px">
+
+<header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px">
+<sc-if value="{{atTop}}" hint-placeholder-val="{{ true }}">
+<a href="SetTarget.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</a>
+</sc-if>
+<sc-if value="{{notTop}}" hint-placeholder-val="{{ false }}">
+<button onClick="{{up}}" aria-label="Back" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #A3A09A; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M15 6l-6 6 6 6"></path></svg>
+</button>
+</sc-if>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+<h1 style="margin: 0; font-size: 16px; font-weight: 500">{{title}}</h1>
+<span style="font-size: 12px; color: #A3A09A">{{crumb}}</span>
+</div>
+<span style="justify-self: end; font-size: 12px; color: #A3A09A; display: inline-flex; align-items: center; gap: 5px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #5AA9F8"></span>P2</span>
+</header>
+
+<sc-if value="{{isRoot}}" hint-placeholder-val="{{ true }}">
+<div style="position: relative">
+<label for="food-search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search foods</label>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="position: absolute; left: 14px; top: 13px; stroke: #7D7A75; stroke-width: 1.75; stroke-linecap: round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg>
+<input id="food-search" type="search" value="{{query}}" placeholder="Search cuts" onChange="{{onQuery}}" style="width: 100%; height: 44px; box-sizing: border-box; border-radius: 12px; border: 1px solid #26292C; background: #16181A; color: #F3F1ED; font-size: 15px; padding: 0 14px 0 40px">
+</div>
+</sc-if>
+
+<sc-if value="{{showRecent}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #A3A09A; padding: 0 4px">Recent</span>
+<div style="background: #16181A; border-radius: 16px; padding: 0 16px">
+<sc-for list="{{recent}}" as="r" hint-placeholder-count="2">
+<button onClick="{{r.pick}}" style="width: 100%; height: 56px; display: flex; align-items: center; justify-content: space-between; background: transparent; border: 0; border-bottom: {{r.rule}}; color: #F3F1ED; cursor: pointer; padding: 0; text-align: left">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px">{{r.name}}</span><span style="font-size: 12px; color: #A3A09A">{{r.meta}}</span></span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #7D7A75; stroke-width: 1.75; stroke-linecap: round"><path d="M12 5v14M5 12h14"></path></svg>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showList}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #A3A09A; padding: 0 4px">{{listHeading}}</span>
+<div style="background: #16181A; border-radius: 16px; padding: 0 16px">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="6">
+<button onClick="{{row.go}}" style="width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; border: 0; border-bottom: {{row.rule}}; color: #F3F1ED; cursor: pointer; padding: 0; text-align: left">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px">{{row.label}}</span><span style="font-size: 12px; color: #A3A09A">{{row.sub}}</span></span>
+<span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #A3A09A">{{row.meta}}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #7D7A75; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M9 6l6 6-6 6"></path></svg></span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isLeaf}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 16px; flex: 1">
+<sc-if value="{{isCustom}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="custom-name" style="font-size: 12px; color: #A3A09A">Name</label>
+<input id="custom-name" type="text" value="{{customName}}" placeholder="e.g. Goat shoulder" onChange="{{onCustom}}" style="height: 48px; box-sizing: border-box; border-radius: 12px; border: 1px solid #2E3134; background: #16181A; color: #F3F1ED; font-size: 16px; padding: 0 14px">
+</div>
+</sc-if>
+
+<div style="background: #16181A; border-radius: 18px; padding: 18px; display: flex; justify-content: space-between; align-items: center">
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: #A3A09A">Pull at</span><span style="font-size: 32px; letter-spacing: -0.02em">{{pullAt}}</span></span>
+<span style="font-size: 12px; color: #A3A09A; max-width: 150px; text-align: right; line-height: 1.4">Fine-tune it on the Targets screen</span>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 8px">
+<span style="font-size: 13px; color: #A3A09A">Weight</span>
+<div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+<button onClick="{{wDec}}" aria-label="Less weight" style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M5 12h14"></path></svg>
+</button>
+<div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 72px; font-weight: 300; letter-spacing: -0.05em; line-height: 1">{{weight}}</span><span style="font-size: 20px; color: #A3A09A">lb</span></div>
+<button onClick="{{wInc}}" aria-label="More weight" style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M5 12h14M12 5v14"></path></svg>
+</button>
+</div>
+<span style="font-size: 12px; color: #7D7A75">Optional. Used to improve time estimates.</span>
+</div>
+
+<div style="flex: 1"></div>
+<a href="SetTarget.dc.html" style="height: 56px; border-radius: 16px; background: #FF7A3D; color: #0C0D0E; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; text-decoration: none">Use for probe 2</a>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const path = st.path || [];
+    const custom = !!st.custom;
+    const query = st.query || '';
+    const weight = st.weight ?? 4;
+    const T = {
+      Beef: { Brisket: { Point: 203, Flat: 203, 'Whole packer': 203 }, 'Beef ribs': { 'Plate ribs': 205, 'Chuck ribs': 205 }, 'Chuck roast': 205, 'Tri-tip': 130, 'Prime rib': 130, Steak: { Ribeye: 130, 'NY strip': 130, Filet: 130, Picanha: 130 } },
+      Pork: { 'Butt / shoulder': 200, Ribs: { 'Spare ribs': 198, 'St. Louis': 198, 'Baby back': 195 }, Belly: 200, Loin: 145, Tenderloin: 145 },
+      Poultry: { Chicken: { Whole: 165, Thighs: 175, Breasts: 160, Wings: 175 }, Turkey: { Whole: 165, Breast: 160 } },
+      Lamb: { Shoulder: 200, Leg: 135, Rack: 130 },
+      Fish: { Salmon: 125, Trout: 135 }
+    };
+    let node = T;
+    path.forEach((k) => { node = node[k]; });
+    const isLeafNode = typeof node === 'number';
+    const isLeaf = custom || isLeafNode;
+    const isRoot = !custom && path.length === 0;
+    const go = (p) => this.setState({ path: p, query: '' });
+    const countLeaves = (n) => typeof n === 'number' ? 1 : Object.keys(n).reduce((a, k) => a + countLeaves(n[k]), 0);
+    const flat = [];
+    const walk = (n, p) => { Object.keys(n).forEach((k) => { const c = n[k]; if (typeof c === 'number') flat.push({ p: p.concat(k), t: c }); else walk(c, p.concat(k)); }); };
+    walk(T, []);
+    let rows;
+    let listHeading;
+    if (isRoot && query.trim()) {
+      const q = query.trim().toLowerCase();
+      const hits = flat.filter((f) => f.p.join(' ').toLowerCase().includes(q));
+      listHeading = hits.length ? 'Results' : 'No matches';
+      rows = hits.slice(0, 8).map((f) => ({ label: f.p[f.p.length - 1], sub: f.p.slice(0, -1).join(' › '), meta: f.t + '°', go: () => go(f.p) }));
+    } else if (!isLeaf) {
+      listHeading = isRoot ? 'All foods' : 'Choose a cut';
+      rows = Object.keys(node).map((k) => {
+        const c = node[k];
+        const leaf = typeof c === 'number';
+        return { label: k, sub: '', meta: leaf ? c + '°' : countLeaves(c) + '', go: () => go(path.concat(k)) };
+      });
+      if (isRoot) rows.push({ label: 'Custom…', sub: 'Name it yourself', meta: '', go: () => this.setState({ custom: true }) });
+    } else {
+      rows = [];
+    }
+    rows = rows.map((r, i) => Object.assign(r, { rule: i < rows.length - 1 ? '1px solid #1F2225' : '0' }));
+    const recentDefs = [
+      { p: ['Beef', 'Brisket', 'Point'], w: 4 },
+      { p: ['Pork', 'Butt / shoulder'], w: 8 }
+    ];
+    const recent = recentDefs.map((r, i) => ({
+      name: r.p.slice(1).join(' '),
+      meta: r.p[0] + ' · ' + r.w + ' lb last time',
+      rule: i === 0 ? '1px solid #1F2225' : '0',
+      pick: () => this.setState({ path: r.p, weight: r.w, query: '' })
+    }));
+    const title = custom ? 'Custom' : (path.length ? path[path.length - 1] : 'What’s on probe 2');
+    const crumb = custom ? 'Your own name' : (path.length > 1 ? path.slice(0, -1).join(' › ') : (path.length === 1 ? 'Choose a cut' : 'Pick a category'));
+    return {
+      atTop: isRoot, notTop: !isRoot, isRoot, isLeaf, isCustom: custom,
+      showRecent: isRoot && !query.trim(),
+      showList: !isLeaf,
+      title, crumb, rows, listHeading, recent, query,
+      customName: st.customName || '',
+      pullAt: (custom ? 200 : (isLeafNode ? node : 0)) + '°',
+      weight: Number(weight).toFixed(1),
+      wInc: () => this.setState({ weight: Math.min(30, weight + 0.5) }),
+      wDec: () => this.setState({ weight: Math.max(0.5, weight - 0.5) }),
+      up: () => custom ? this.setState({ custom: false }) : go(path.slice(0, -1)),
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      onCustom: (e) => this.setState({ customName: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

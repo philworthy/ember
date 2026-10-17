@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — past cook</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button,textarea,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1300px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+
+<header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px">
+<a href="History.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<span></span>
+<span></span>
+</header>
+
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.02em">Brisket</h1>
+<span style="font-size: 14px; color: #A3A09A">{{subtitle}}</span>
+</div>
+
+<section style="background: #16181A; border-radius: 22px; padding: 16px 0 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="position: relative; height: 222px">
+<svg width="358" height="200" viewBox="0 0 358 200" role="img" aria-label="Pit and probe temperatures across the whole recording" style="display: block">
+<line x1="0" x2="358" y1="33.3" y2="33.3" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="66.7" y2="66.7" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="100" y2="100" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="133.3" y2="133.3" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="166.7" y2="166.7" style="stroke: #24272A; stroke-width: 1"></line>
+<text x="16" y="29" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">250</text>
+<text x="16" y="62.7" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">200</text>
+<text x="16" y="96" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">150</text>
+<text x="16" y="129.3" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">100</text>
+<rect x="{{stallX}}" y="0" width="{{stallW}}" height="200" style="fill: #F4CF63; opacity: 0.07"></rect>
+<line x1="0" x2="358" y1="{{t203}}" y2="{{t203}}" style="stroke: #A3A09A; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.6"></line>
+<path d="{{pointD}}" style="fill: none; stroke: #5AA9F8; stroke-width: 2; stroke-linejoin: round"></path>
+<path d="{{flatD}}" style="fill: none; stroke: #F4CF63; stroke-width: 2; stroke-linejoin: round"></path>
+<path d="{{pitD}}" style="fill: none; stroke: #FF7A3D; stroke-width: 2; stroke-linejoin: round"></path>
+<rect x="0" y="0" width="{{cutLW}}" height="200" style="fill: #16181A; opacity: 0.78"></rect>
+<rect x="{{cutRX}}" y="0" width="{{cutRW}}" height="200" style="fill: #16181A; opacity: 0.78"></rect>
+<line x1="{{sx}}" x2="{{sx}}" y1="0" y2="200" style="stroke: #F3F1ED; stroke-width: 1.5; display: {{handleDisp}}"></line>
+<line x1="{{ex}}" x2="{{ex}}" y1="0" y2="200" style="stroke: #F3F1ED; stroke-width: 1.5; display: {{handleDisp}}"></line>
+</svg>
+<div style="position: absolute; left: 0; right: 0; top: 206px; height: 16px; font-family: 'Geist Mono', monospace; font-size: 10px; color: #7D7A75">
+<sc-for list="{{ticks}}" as="k" hint-placeholder-count="5">
+<span style="position: absolute; top: 0; left: {{k.left}}; transform: {{k.shift}}">{{k.label}}</span>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; gap: 14px; padding: 0 16px; font-size: 12px; color: #A3A09A">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FF7A3D"></span>Pit</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #F4CF63"></span>Flat</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #5AA9F8"></span>Point</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 8px; border-radius: 2px; background: #F4CF63; opacity: 0.25"></span>Stall</span>
+</div>
+
+<sc-if value="{{notTrimming}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 16px 0; border-top: 1px solid #1F2225; margin-top: 4px">
+<span style="font-size: 13px; color: #A3A09A">{{rangeText}}</span>
+<button onClick="{{startTrim}}" style="height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; font-size: 13px; cursor: pointer">Adjust start &amp; end</button>
+</div>
+</sc-if>
+
+<sc-if value="{{trimming}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 10px 16px 0; border-top: 1px solid #1F2225; margin-top: 4px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; font-size: 13px"><label for="trim-start" style="color: #A3A09A">Start</label><span>{{startClock}}</span></div>
+<input id="trim-start" type="range" min="0" max="{{maxStart}}" step="5" value="{{s}}" onChange="{{onStart}}" style="width: 100%; height: 28px; accent-color: #F3F1ED; margin: 0">
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; font-size: 13px"><label for="trim-end" style="color: #A3A09A">End</label><span>{{endClock}}</span></div>
+<input id="trim-end" type="range" min="{{minEnd}}" max="{{TOTAL}}" step="5" value="{{e}}" onChange="{{onEnd}}" style="width: 100%; height: 28px; accent-color: #F3F1ED; margin: 0">
+</div>
+<p style="margin: 0; font-size: 12px; color: #7D7A75; line-height: 1.4">Readings are recorded the whole time the grill is on, so you can widen this as well as narrow it.</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{reset}}" style="height: 44px; border-radius: 12px; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; font-size: 14px; cursor: pointer">Reset</button>
+<button onClick="{{doneTrim}}" style="height: 44px; border-radius: 12px; border: 0; background: #F3F1ED; color: #0C0D0E; font-size: 14px; font-weight: 600; cursor: pointer">Save</button>
+</div>
+</div>
+</sc-if>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{stats}}" as="st" hint-placeholder-count="3">
+<div style="background: #16181A; border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{st.color}}"></span>{{st.name}}</span>
+<span style="font-size: 12px; color: #A3A09A">{{st.meta}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #A3A09A">{{st.aLabel}}</span><span style="font-size: 18px">{{st.a}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #A3A09A">{{st.bLabel}}</span><span style="font-size: 18px">{{st.b}}</span></div>
+</div>
+</div>
+</sc-for>
+</section>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="notes" style="font-size: 12px; color: #A3A09A; padding: 0 4px">Notes</label>
+<textarea id="notes" rows="3" placeholder="Wood, wrap, rest, what you'd change next time" style="box-sizing: border-box; width: 100%; border-radius: 14px; border: 1px solid #26292C; background: #16181A; color: #F3F1ED; font-size: 15px; line-height: 1.4; padding: 12px 14px; resize: none"></textarea>
+</div>
+
+<div style="flex: 1"></div>
+<a href="SetTarget.dc.html" style="height: 56px; border-radius: 16px; border: 1px solid #2E3134; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; text-decoration: none">Cook this again</a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const TOTAL = 760;
+    const S0 = 20, E0 = 700;
+    const s = st.s ?? S0;
+    const e = st.e ?? E0;
+    const trimming = !!st.trimming;
+    const W = 354, H = 200, HI = 300;
+    const lerp = (keys) => (t) => {
+      if (t <= keys[0][0]) return keys[0][1];
+      for (let i = 1; i < keys.length; i++) {
+        if (t <= keys[i][0]) {
+          const [t0, v0] = keys[i - 1], [t1, v1] = keys[i];
+          const u = (t - t0) / (t1 - t0);
+          const k = u * u * (3 - 2 * u);
+          return v0 + (v1 - v0) * k;
+        }
+      }
+      return keys[keys.length - 1][1];
+    };
+    const flat = lerp([[0, 62], [20, 40], [80, 85], [170, 130], [290, 158], [420, 166], [540, 185], [660, 203], [700, 205], [712, 150], [760, 120]]);
+    const point = lerp([[0, 62], [20, 40], [80, 90], [170, 138], [270, 160], [375, 167], [490, 188], [610, 203], [700, 206], [712, 150], [760, 118]]);
+    const pitBase = lerp([[0, 66], [20, 70], [35, 180], [50, 245], [65, 262], [80, 252], [700, 250], [720, 215], [760, 160]]);
+    const pit = (t) => pitBase(t) + (t > 80 && t < 700 ? 3 * Math.sin(t / 11) + 1.5 * Math.sin(t / 3.1) : 0);
+    const x = (t) => (t / TOTAL) * W;
+    const y = (v) => H - (v / HI) * H;
+    const path = (fn) => { let d = ''; for (let t = 0; t <= TOTAL; t += 4) d += (d ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(fn(t)).toFixed(1); return d; };
+    const ticks = [0, 180, 360, 540].map((t) => ({ label: (t / 60) + 'h', left: x(t).toFixed(1) + 'px', shift: t === 0 ? 'none' : 'translateX(-50%)' }));
+    ticks.push({ label: '12h 40m', left: W + 'px', shift: 'translateX(-100%)' });
+    const clock = (m) => {
+      const base = 6 * 60 + 40 + m;
+      let h = Math.floor(base / 60) % 24; const mm = base % 60;
+      const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+      return h + ':' + String(mm).padStart(2, '0') + ' ' + ap;
+    };
+    const dur = (m) => { const h = Math.floor(m / 60), mm = m % 60; return h + 'h ' + mm + 'm'; };
+    const stats = [
+      { name: 'Pit', color: '#FF7A3D', meta: 'Fire it up 10 min', aLabel: 'Average', a: '251°', bLabel: 'Held within', b: '±6°' },
+      { name: 'Brisket flat', color: '#F4CF63', meta: 'Beef · 6.5 lb', aLabel: 'Reached 203° in', a: '10h 40m', bLabel: 'Stall 158–166°', b: '2h 10m' },
+      { name: 'Brisket point', color: '#5AA9F8', meta: 'Beef · 4 lb', aLabel: 'Reached 203° in', a: '9h 50m', bLabel: 'Stall 160–167°', b: '1h 45m' }
+    ];
+    return {
+      pitD: path(pit), flatD: path(flat), pointD: path(point),
+      t203: y(203).toFixed(1),
+      stallX: x(290).toFixed(1), stallW: (x(420) - x(290)).toFixed(1),
+      cutLW: x(s).toFixed(1), cutRX: x(e).toFixed(1), cutRW: (W + 4 - x(e)).toFixed(1),
+      sx: x(s).toFixed(1), ex: x(e).toFixed(1),
+      handleDisp: trimming ? 'inline' : 'none',
+      ticks, stats, s, e, TOTAL,
+      maxStart: e - 30, minEnd: s + 30,
+      trimming, notTrimming: !trimming,
+      subtitle: 'Sun, Oct 11 · ' + dur(e - s) + ' · Pit 250°',
+      rangeText: clock(s) + ' – ' + clock(e),
+      startClock: clock(s), endClock: clock(e),
+      startTrim: () => this.setState({ trimming: true }),
+      doneTrim: () => this.setState({ trimming: false }),
+      reset: () => this.setState({ s: S0, e: E0 }),
+      onStart: (ev) => this.setState({ s: Number(ev.target.value) }),
+      onEnd: (ev) => this.setState({ e: Number(ev.target.value) })
+    };
+  }
+}
+</script>
+</body>
+</html>

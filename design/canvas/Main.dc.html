@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — live cook</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1200px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+
+<header style="display: flex; align-items: center; justify-content: space-between; height: 44px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 18px; font-weight: 600; letter-spacing: -0.02em">Ember</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #A3A09A; padding: 5px 10px; border: 1px solid #26292C; border-radius: 999px"><span style="width: 6px; height: 6px; border-radius: 50%; background: #5FD08A"></span>{{statusText}}</span>
+</div>
+<div style="display: flex; align-items: center">
+<a href="History.dc.html" aria-label="History" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v3.5h3.5M12 8v4l3 2"></path></svg>
+</a>
+<button aria-label="Settings" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; color: #A3A09A; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+</button>
+</div>
+</header>
+
+<sc-if value="{{looksDone}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="background: #16181A; border: 1px solid #2E3134; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex: none; margin-top: 1px; stroke: #5FD08A; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg>
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 15px; font-weight: 500">Looks like you're done</span><span style="font-size: 13px; color: #A3A09A; line-height: 1.45">All probes are out and the pit is cooling. The cook ends by itself in 52 min.</span></span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{keepGoing}}" style="height: 44px; border-radius: 12px; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; font-size: 14px; font-weight: 500; cursor: pointer">Keep going</button>
+<a href="Idle.dc.html" style="height: 44px; border-radius: 12px; background: #FF7A3D; color: #0C0D0E; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; text-decoration: none">End cook</a>
+</div>
+</div>
+</sc-if>
+
+<section style="background: #16181A; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start">
+<div>
+<div style="font-size: 13px; color: #A3A09A; display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FF7A3D"></span>Pit</div>
+<div style="font-size: 88px; font-weight: 300; letter-spacing: -0.05em; line-height: 1; margin-top: 10px">{{pitCur}}<span style="font-size: 44px; color: #A3A09A; vertical-align: top; margin-left: 2px">°</span></div>
+</div>
+<a href="SetTarget.dc.html" style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-decoration: none; padding: 10px 14px; border-radius: 14px; background: #1F2225; min-height: 44px">
+<span style="font-size: 12px; color: #A3A09A; display: flex; align-items: center; gap: 4px">Target<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></span>
+<span style="font-size: 26px; font-weight: 500; letter-spacing: -0.02em; color: #F3F1ED">250°</span>
+</a>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #A3A09A">
+<span style="display: inline-flex; align-items: center; gap: 6px; color: #F3F1ED"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #5FD08A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 12l5 5L20 7"></path></svg>{{pitStatus}}</span>
+<span style="display: inline-flex; align-items: center; gap: 8px">{{fanText}}<span style="width: 48px; height: 4px; border-radius: 2px; background: #26292C; overflow: hidden; display: inline-block"><span style="display: block; width: {{fanPct}}; height: 4px; background: #A3A09A"></span></span></span>
+</div>
+</section>
+
+<section style="background: #16181A; border-radius: 22px; padding: 16px 0 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Temperature</h2>
+<div role="group" aria-label="Time range" style="display: flex; background: #0F1112; border-radius: 10px; padding: 3px; gap: 2px">
+<sc-for list="{{ranges}}" as="r" hint-placeholder-count="3">
+<button onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="border: 0; min-width: 44px; height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; cursor: pointer; background: {{r.bg}}; color: {{r.fg}}">{{r.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<div style="position: relative; height: 222px">
+<svg width="358" height="200" viewBox="0 0 358 200" role="img" aria-label="Pit and probe temperatures over time, with dashed target lines" style="display: block">
+<line x1="0" x2="358" y1="33.3" y2="33.3" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="66.7" y2="66.7" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="100" y2="100" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="133.3" y2="133.3" style="stroke: #24272A; stroke-width: 1"></line>
+<line x1="0" x2="358" y1="166.7" y2="166.7" style="stroke: #24272A; stroke-width: 1"></line>
+<text x="16" y="29" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">250</text>
+<text x="16" y="62.7" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">200</text>
+<text x="16" y="96" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">150</text>
+<text x="16" y="129.3" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">100</text>
+<text x="16" y="162.7" style="fill: #7D7A75; font-family: 'Geist Mono', monospace; font-size: 10px">50</text>
+
+<line x1="0" x2="358" y1="{{ser.pit.ty}}" y2="{{ser.pit.ty}}" style="stroke: #FF7A3D; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; display: {{ser.pit.disp}}"></line>
+<line x1="0" x2="358" y1="{{ser.p1.ty}}" y2="{{ser.p1.ty}}" style="stroke: #F4CF63; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; display: {{ser.p1.disp}}"></line>
+<line x1="0" x2="358" y1="{{ser.p2.ty}}" y2="{{ser.p2.ty}}" style="stroke: #5AA9F8; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; display: {{ser.p2.disp}}"></line>
+<line x1="0" x2="358" y1="{{ser.p3.ty}}" y2="{{ser.p3.ty}}" style="stroke: #C59CFF; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; display: {{ser.p3.disp}}"></line>
+
+<path d="{{ser.p3.d}}" style="fill: none; stroke: #C59CFF; stroke-width: 2; stroke-linejoin: round; display: {{ser.p3.disp}}"></path>
+<path d="{{ser.p2.d}}" style="fill: none; stroke: #5AA9F8; stroke-width: 2; stroke-linejoin: round; display: {{ser.p2.disp}}"></path>
+<path d="{{ser.p1.d}}" style="fill: none; stroke: #F4CF63; stroke-width: 2; stroke-linejoin: round; display: {{ser.p1.disp}}"></path>
+<path d="{{ser.pit.d}}" style="fill: none; stroke: #FF7A3D; stroke-width: 2; stroke-linejoin: round; display: {{ser.pit.disp}}"></path>
+
+<circle cx="354" cy="{{ser.p3.ey}}" r="4" style="fill: #C59CFF; stroke: #16181A; stroke-width: 2; display: {{ser.p3.disp}}"></circle>
+<circle cx="354" cy="{{ser.p2.ey}}" r="4" style="fill: #5AA9F8; stroke: #16181A; stroke-width: 2; display: {{ser.p2.disp}}"></circle>
+<circle cx="354" cy="{{ser.p1.ey}}" r="4" style="fill: #F4CF63; stroke: #16181A; stroke-width: 2; display: {{ser.p1.disp}}"></circle>
+<circle cx="354" cy="{{ser.pit.ey}}" r="4" style="fill: #FF7A3D; stroke: #16181A; stroke-width: 2; display: {{ser.pit.disp}}"></circle>
+</svg>
+<div style="position: absolute; left: 0; right: 0; top: 206px; height: 16px; font-family: 'Geist Mono', monospace; font-size: 10px; color: #7D7A75">
+<sc-for list="{{ticks}}" as="k" hint-placeholder-count="5">
+<span style="position: absolute; top: 0; left: {{k.left}}; transform: {{k.shift}}">{{k.label}}</span>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+<button onClick="{{c.toggle}}" aria-pressed="{{c.pressed}}" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13px; cursor: pointer; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.fg}}"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{c.dot}}"></span>{{c.name}}<span style="color: #A3A09A">{{c.cur}}°</span></button>
+</sc-for>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 4px 4px 0; font-size: 15px; font-weight: 500">Probes</h2>
+<sc-for list="{{probes}}" as="p" hint-placeholder-count="3">
+<sc-if value="{{p.live}}" hint-placeholder-val="{{ true }}">
+<a href="SetTarget.dc.html" style="display: flex; flex-direction: column; gap: 12px; background: #16181A; border-radius: 18px; padding: 16px; text-decoration: none">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #F3F1ED"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{p.color}}"></span>{{p.name}}<span style="color: #7D7A75">{{p.tag}}</span></span>
+<span style="font-size: 13px; color: #A3A09A">{{p.eta}}</span>
+</div>
+<div style="display: flex; align-items: baseline; gap: 8px">
+<span style="font-size: 40px; font-weight: 400; letter-spacing: -0.03em; line-height: 1; color: #F3F1ED">{{p.cur}}°</span>
+<span style="font-size: 15px; color: #A3A09A">{{p.of}}</span>
+</div>
+<div style="height: 4px; background: #26292C; border-radius: 2px; overflow: hidden"><div style="height: 4px; border-radius: 2px; width: {{p.pct}}; background: {{p.color}}"></div></div>
+</a>
+</sc-if>
+<sc-if value="{{p.removed}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #121415; border: 1px solid #1F2225; border-radius: 18px; padding: 14px 16px">
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #F3F1ED"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #5FD08A; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round"><path d="M5 12l5 5L20 7"></path></svg>{{p.name}}<span style="color: #7D7A75">{{p.tag}}</span></span>
+<span style="font-size: 13px; color: #A3A09A">{{p.offText}}</span>
+</span>
+<a href="FoodPicker.dc.html" style="height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #2E3134; display: inline-flex; align-items: center; font-size: 13px; text-decoration: none; white-space: nowrap">Reuse probe</a>
+</div>
+</sc-if>
+</sc-for>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<a href="FireUp.dc.html" style="height: 52px; border-radius: 14px; border: 1px solid #2E3134; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 500; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #FF7A3D; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.8 2.2-5 .2 1.6 1 2.6 2 3 0-3 .3-5.5.8-8z"></path></svg>Fire it up</a>
+<a href="Idle.dc.html" style="height: 52px; border-radius: 14px; border: 1px solid #2E3134; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 500; text-decoration: none; color: #F3F1ED">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>End cook</a>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scenario":{"editor":"enum","options":["Cooking","Item came off","Looks done"],"default":"Cooking"},"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const off = st.off || {};
+    const range = st.range || 'all';
+    const NOW = 400;
+    const pit = (t) => 250 - 175 * Math.exp(-t / 14) + 14 * Math.exp(-((t - 42) * (t - 42)) / 120) + 2.5 * Math.sin(t / 7) + 1.2 * Math.sin(t / 2.3);
+    const f1 = (t) => 42 + 150 * (1 - Math.exp(-t / 160));
+    const f2 = (t) => 42 + 155 * (1 - Math.exp(-t / 140));
+    const f3 = (t) => 40 + 140 * (1 - Math.exp(-t / 180));
+    const back = { '1h': 60, '3h': 180, '6h': 360 };
+    const t0 = back[range] ? NOW - back[range] : 0;
+    const W = 358, H = 200, HI = 300;
+    const x = (t) => ((t - t0) / (NOW - t0)) * (W - 4);
+    const y = (v) => H - (v / HI) * H;
+    const step = range === '1h' ? 1 : 2;
+    const path = (fn) => {
+      let d = '';
+      for (let t = t0; t <= NOW; t += step) d += (d ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(fn(t)).toFixed(1);
+      return d;
+    };
+    const fmt = (m) => { const h = Math.floor(m / 60), mm = Math.round((m % 60) / 5) * 5; return h ? h + 'h ' + mm + 'm' : mm + 'm'; };
+    const defs = [
+      { id: 'pit', name: 'Pit', color: '#FF7A3D', fn: pit, target: 250 },
+      { id: 'p1', n: 1, name: 'Brisket flat', short: 'Flat', color: '#F4CF63', fn: f1, target: 203, start: 42 },
+      { id: 'p2', n: 2, name: 'Brisket point', short: 'Point', color: '#5AA9F8', fn: f2, target: 203, start: 42 },
+      { id: 'p3', n: 3, name: 'Pork butt', short: 'Butt', color: '#C59CFF', fn: f3, target: 200, start: 40 }
+    ];
+    const ser = {};
+    const chips = [];
+    defs.forEach((s) => {
+      const isOff = !!off[s.id];
+      const cur = Math.round(s.fn(NOW));
+      ser[s.id] = { d: path(s.fn), ty: y(s.target).toFixed(1), ey: y(s.fn(NOW)).toFixed(1), disp: isOff ? 'none' : 'inline' };
+      chips.push({
+        name: s.short || s.name, cur,
+        pressed: isOff ? 'false' : 'true',
+        dot: isOff ? '#3A3D40' : s.color,
+        bg: isOff ? 'transparent' : '#1F2225',
+        border: isOff ? '#26292C' : '#2E3134',
+        fg: isOff ? '#7D7A75' : '#F3F1ED',
+        toggle: () => this.setState({ off: Object.assign({}, off, { [s.id]: !isOff }) })
+      });
+    });
+    const scenario = this.props.scenario ?? 'Cooking';
+    const dismissed = !!st.dismissed;
+    const offMap = scenario === 'Item came off'
+      ? { p2: 'Came off at 204° after 6h 20m' }
+      : (scenario === 'Looks done'
+        ? { p1: 'Came off at 204° after 10h 42m', p2: 'Came off at 204° after 9h 52m', p3: 'Came off at 201° after 10h 05m' }
+        : {});
+    const done = scenario === 'Looks done';
+    const probes = defs.slice(1).map((s) => {
+      const cur = Math.round(s.fn(NOW));
+      const slope = (s.fn(NOW) - s.fn(NOW - 20)) / 20;
+      const mins = (s.target - s.fn(NOW)) / slope;
+      return {
+        n: s.n, tag: 'P' + s.n, of: 'of ' + s.target + '°', name: s.name, color: s.color, cur, target: s.target,
+        pct: Math.max(0, Math.min(100, ((cur - s.start) / (s.target - s.start)) * 100)).toFixed(0) + '%',
+        eta: cur >= s.target ? 'Done' : 'est. ' + fmt(mins),
+        removed: !!offMap[s.id], live: !offMap[s.id], offText: offMap[s.id] || ''
+      };
+    });
+    const ticks = [];
+    const span = NOW - t0;
+    const every = range === '1h' ? 15 : (range === '6h' ? 120 : 60);
+    if (range === 'all') {
+      [0, 120, 240, 360].forEach((t) => ticks.push({ label: (t / 60) + 'h', left: ((t / span) * (W - 4)).toFixed(1) + 'px', shift: t === 0 ? 'none' : 'translateX(-50%)' }));
+      ticks.push({ label: 'now', left: (W - 4) + 'px', shift: 'translateX(-100%)' });
+    }
+    for (let t = NOW; range !== 'all' && t >= t0 - 0.01; t -= every) {
+      const ago = NOW - t;
+      const label = ago === 0 ? 'now' : (range === 'all' ? Math.round(t / 60) + 'h' : '-' + (ago >= 60 ? (ago / 60) + 'h' : ago + 'm'));
+      const left = (((t - t0) / span) * (W - 4)).toFixed(1) + 'px';
+      ticks.push({ label, left, shift: ago === 0 ? 'translateX(-100%)' : (t === t0 ? 'none' : 'translateX(-50%)') });
+    }
+    const ranges = ['1h', '3h', '6h', 'all'].map((r) => ({
+      label: r === 'all' ? 'All' : r,
+      pressed: range === r ? 'true' : 'false',
+      bg: range === r ? '#26292C' : 'transparent',
+      fg: range === r ? '#F3F1ED' : '#A3A09A',
+      pick: () => this.setState({ range: r })
+    }));
+    return { statusText: 'Cooking · ' + fmt(NOW), pitCur: done ? 212 : Math.round(pit(NOW)),
+      looksDone: done && !dismissed,
+      keepGoing: () => this.setState({ dismissed: true }),
+      pitStatus: done ? 'Cooling' : 'Holding steady',
+      fanText: done ? 'Fan 0%' : 'Fan 22%',
+      fanPct: done ? '0%' : '22%', ser, chips, probes, ticks, ranges };
+  }
+}
+</script>
+</body>
+</html>

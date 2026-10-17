@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — history</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 16px">
+
+<header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px">
+<a href="Idle.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<h1 style="margin: 0; text-align: center; font-size: 16px; font-weight: 500">History</h1>
+<span></span>
+</header>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{cooks}}" as="c" hint-placeholder-count="5">
+<a href="HistoryDetail.dc.html" style="display: flex; flex-direction: column; gap: 10px; background: #16181A; border-radius: 18px; padding: 14px 16px; text-decoration: none">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+<span style="font-size: 16px; font-weight: 500; color: #F3F1ED">{{c.title}}</span>
+<span style="font-size: 12px; color: #A3A09A; white-space: nowrap">{{c.date}}</span>
+</div>
+<svg width="326" height="36" viewBox="0 0 326 36" aria-hidden="true" style="display: block">
+<path d="{{c.p2}}" style="fill: none; stroke: #5AA9F8; stroke-width: 1.5; opacity: 0.85"></path>
+<path d="{{c.p1}}" style="fill: none; stroke: #F4CF63; stroke-width: 1.5; opacity: 0.85"></path>
+<path d="{{c.pit}}" style="fill: none; stroke: #FF7A3D; stroke-width: 1.5"></path>
+</svg>
+<div style="display: flex; gap: 14px; font-size: 12px; color: #A3A09A">
+<span>{{c.dur}}</span><span>{{c.pitLabel}}</span><span>{{c.foods}}</span>
+</div>
+</a>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const W = 326, H = 36;
+    const mk = (dur, hi, fn) => {
+      let d = '';
+      for (let i = 0; i <= 60; i++) {
+        const t = (i / 60) * dur;
+        const v = fn(t);
+        d += (d ? 'L' : 'M') + ((i / 60) * W).toFixed(1) + ',' + (H - 2 - (v / hi) * (H - 4)).toFixed(1);
+      }
+      return d;
+    };
+    const pitFn = (target) => (t) => target - (target - 70) * Math.exp(-t / 14) + 3 * Math.sin(t / 9);
+    const foodFn = (tau, amp) => (t) => 40 + amp * (1 - Math.exp(-t / tau));
+    const defs = [
+      { title: 'Brisket', date: 'Sun, Oct 11', dur: 680, pitT: 250, foods: 'Flat 6.5 lb · Point 4 lb', a: [230, 168], b: [200, 170] },
+      { title: 'Pizza night', date: 'Sat, Oct 3', dur: 75, pitT: 680, foods: 'No probes' },
+      { title: 'Pork butt', date: 'Sun, Sep 20', dur: 580, pitT: 225, foods: 'Butt 8 lb', a: [190, 165] },
+      { title: 'Spare ribs & wings', date: 'Mon, Sep 7', dur: 330, pitT: 275, foods: 'Ribs · Wings', a: [110, 160], b: [40, 140] },
+      { title: 'Whole chicken', date: 'Sat, Aug 29', dur: 110, pitT: 350, foods: 'Chicken 4.5 lb', a: [55, 135] }
+    ];
+    const fmt = (m) => { const h = Math.floor(m / 60), mm = m % 60; return h ? h + 'h ' + (mm ? mm + 'm' : '') : mm + 'm'; };
+    const cooks = defs.map((c) => {
+      const hi = Math.max(c.pitT + 40, 260);
+      return {
+        title: c.title, date: c.date, foods: c.foods,
+        dur: fmt(c.dur).trim(),
+        pitLabel: 'Pit ' + c.pitT + '°',
+        pit: mk(c.dur, hi, pitFn(c.pitT)),
+        p1: c.a ? mk(c.dur, hi, foodFn(c.a[0], c.a[1])) : '',
+        p2: c.b ? mk(c.dur, hi, foodFn(c.b[0], c.b[1])) : ''
+      };
+    });
+    return { cooks };
+  }
+}
+</script>
+</body>
+</html>

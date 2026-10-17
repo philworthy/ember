@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — set targets</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 900px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 18px">
+
+<header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px">
+<a href="Main.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</a>
+<h1 style="margin: 0; text-align: center; font-size: 16px; font-weight: 500">Targets</h1>
+<span></span>
+</header>
+
+<div role="group" aria-label="Choose what to set" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: #16181A; border-radius: 14px; padding: 4px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="height: 44px; border: 0; border-radius: 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; background: {{t.bg}}; color: {{t.fg}}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{t.color}}"></span>{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isProbe}}" hint-placeholder-val="{{ false }}">
+<a href="FoodPicker.dc.html" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box; border-radius: 16px; background: #16181A; text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 12px; color: #A3A09A">{{foodHeading}}</span>
+<span style="font-size: 16px; font-weight: 500">{{foodName}}</span>
+<span style="font-size: 12px; color: #A3A09A">{{foodMeta}}</span>
+</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #A3A09A">Change<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: #7D7A75; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M9 6l6 6-6 6"></path></svg></span>
+</a>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+<button onClick="{{dec}}" aria-label="{{decLabel}}" style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M5 12h14"></path></svg>
+</button>
+<div style="font-size: 88px; font-weight: 300; letter-spacing: -0.05em; line-height: 1">{{val}}<span style="font-size: 40px; color: #A3A09A; vertical-align: top">°</span></div>
+<button onClick="{{inc}}" aria-label="{{incLabel}}" style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M5 12h14M12 5v14"></path></svg>
+</button>
+</div>
+<div style="font-size: 13px; color: #A3A09A">{{caption}}</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="target-slider" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Target temperature</label>
+<input id="target-slider" type="range" min="{{min}}" max="{{max}}" step="{{step}}" value="{{val}}" onChange="{{onSlide}}" style="width: 100%; height: 32px; accent-color: {{color}}; margin: 0">
+<div style="display: flex; justify-content: space-between; font-family: 'Geist Mono', monospace; font-size: 11px; color: #7D7A75"><span>{{minLabel}}</span><span>{{maxLabel}}</span></div>
+</div>
+
+<sc-if value="{{isPit}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{presets}}" as="p" hint-placeholder-count="6">
+<button onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="height: 52px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 14px; background: #16181A; color: #F3F1ED; border: 1px solid {{p.border}}"><span>{{p.label}}</span><span style="color: #A3A09A">{{p.temp}}</span></button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{overLimit}}" hint-placeholder-val="{{ false }}">
+<div role="note" style="display: flex; gap: 10px; align-items: flex-start; background: #2A1A14; border-radius: 14px; padding: 12px 14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex: none; margin-top: 1px; stroke: #FF9A6B; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round"><path d="M12 4l9 16H3L12 4zM12 10v4M12 17.5v.01"></path></svg>
+<span style="font-size: 13px; line-height: 1.45; color: #E5D3CA">Above 500° the iKamand can't hold a set point. It runs the fan flat out, and you control the heat with the top vent.</span>
+</div>
+</sc-if>
+
+<div style="flex: 1"></div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-if value="{{isProbe}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; font-size: 13px; color: #A3A09A; text-align: center">{{notifyText}}</p>
+</sc-if>
+<a href="Main.dc.html" style="height: 56px; border-radius: 16px; background: #FF7A3D; color: #0C0D0E; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; text-decoration: none">{{ctaLabel}}</a>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const tab = st.tab || 'pit';
+    const vals = st.vals || { pit: 250, p1: 203, p2: 203, p3: 200 };
+    const defs = {
+      pit: { label: 'Pit', color: '#FF7A3D', cur: 249, min: 150, max: 700, step: 5 },
+      p1: { label: 'P1', color: '#F4CF63', cur: 180, min: 100, max: 220, step: 1, n: 1, food: 'Brisket flat', path: 'Beef › Brisket', w: '6.5 lb' },
+      p2: { label: 'P2', color: '#5AA9F8', cur: 188, min: 100, max: 220, step: 1, n: 2, food: 'Brisket point', path: 'Beef › Brisket', w: '4 lb' },
+      p3: { label: 'P3', color: '#C59CFF', cur: 165, min: 100, max: 220, step: 1, n: 3, food: 'Pork butt', path: 'Pork › Butt / shoulder', w: '8 lb' }
+    };
+    const d = defs[tab];
+    const val = vals[tab];
+    const setVal = (v) => {
+      const c = Math.max(d.min, Math.min(d.max, Math.round(v)));
+      this.setState({ vals: Object.assign({}, vals, { [tab]: c }) });
+    };
+    const isProbe = tab !== 'pit';
+    const pitPresets = [['Low & slow', 225], ['Smoke', 250], ['Hot & fast', 300], ['Roast', 350], ['Sear', 500], ['Pizza', 700]];
+    const presets = pitPresets.map(([label, temp]) => ({
+      label, temp: temp + '°',
+      pressed: temp === val ? 'true' : 'false',
+      border: temp === val ? d.color : '#1F2225',
+      pick: () => setVal(temp)
+    }));
+    const tabs = Object.keys(defs).map((k) => ({
+      label: defs[k].label, color: defs[k].color,
+      pressed: k === tab ? 'true' : 'false',
+      bg: k === tab ? '#26292C' : 'transparent',
+      fg: k === tab ? '#F3F1ED' : '#A3A09A',
+      pick: () => this.setState({ tab: k })
+    }));
+    const name = isProbe ? d.food : 'Pit';
+    return {
+      tabs, presets, val, isProbe,
+      isPit: !isProbe,
+      overLimit: !isProbe && val > 500,
+      color: d.color, min: d.min, max: d.max, step: d.step,
+      minLabel: d.min + '°', maxLabel: d.max + '°',
+      foodHeading: isProbe ? 'Probe ' + d.n : '',
+      foodName: isProbe ? d.food : '',
+      foodMeta: isProbe ? d.path + ' · ' + d.w : '',
+      caption: name + ' is ' + d.cur + '° now',
+      ctaLabel: 'Set ' + name.toLowerCase() + ' to ' + val + '°',
+      notifyText: 'You’ll get a notification when it reaches ' + val + '°.',
+      incLabel: 'Raise by ' + d.step + ' degrees',
+      decLabel: 'Lower by ' + d.step + ' degrees',
+      inc: () => setVal(val + d.step),
+      dec: () => setVal(val - d.step),
+      onSlide: (e) => setVal(Number(e.target.value))
+    };
+  }
+}
+</script>
+</body>
+</html>

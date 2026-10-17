@@ -1,0 +1,24 @@
+{
+  "_note": "Seed catalog. Leaves are default pull-at temperatures in °F. Category > cut > optional sub-cut.",
+  "Beef": {
+    "Brisket": { "Point": 203, "Flat": 203, "Whole packer": 203 },
+    "Beef ribs": { "Plate ribs": 205, "Chuck ribs": 205 },
+    "Chuck roast": 205,
+    "Tri-tip": 130,
+    "Prime rib": 130,
+    "Steak": { "Ribeye": 130, "NY strip": 130, "Filet": 130, "Picanha": 130 }
+  },
+  "Pork": {
+    "Butt / shoulder": 200,
+    "Ribs": { "Spare ribs": 198, "St. Louis": 198, "Baby back": 195 },
+    "Belly": 200,
+    "Loin": 145,
+    "Tenderloin": 145
+  },
+  "Poultry": {
+    "Chicken": { "Whole": 165, "Thighs": 175, "Breasts": 160, "Wings": 175 },
+    "Turkey": { "Whole": 165, "Breast": 160 }
+  },
+  "Lamb": { "Shoulder": 200, "Leg": 135, "Rack": 130 },
+  "Fish": { "Salmon": 125, "Trout": 135 }
+}

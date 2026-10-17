@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ember — fire it up</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C0D0E}
+a{color:#F3F1ED}a:hover{color:#FFFFFF}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0C0D0E; color: #F3F1ED; font-family: 'Geist', system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 20px">
+
+<header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px">
+<a href="Main.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #A3A09A">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 1.75; stroke-linecap: round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</a>
+<h1 style="margin: 0; text-align: center; font-size: 16px; font-weight: 500">Fire it up</h1>
+<span></span>
+</header>
+
+<sc-if value="{{choosing}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 20px; flex: 1">
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #A3A09A">Runs the fan at full speed to get the coals going. Pick a time for how hot you want the grill.</p>
+
+<div role="group" aria-label="Duration" style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+<button onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="height: 72px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; background: #16181A; color: #F3F1ED; border: 1px solid {{o.border}}; text-align: left">
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 22px; font-weight: 500; letter-spacing: -0.02em">{{o.title}}</span><span style="font-size: 13px; color: #A3A09A">{{o.range}}</span></span>
+<span style="width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{o.ring}}"></span>
+</button>
+</sc-for>
+</div>
+
+<button onClick="{{toggleHold}}" aria-pressed="{{holdPressed}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 16px; background: #16181A; border: 0; color: #F3F1ED; cursor: pointer; text-align: left">
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 15px">Then hold pit at 250°</span><span style="font-size: 13px; color: #A3A09A">Starts the cook when the timer ends</span></span>
+<span style="width: 48px; height: 28px; border-radius: 999px; padding: 3px; box-sizing: border-box; display: flex; background: {{trackBg}}; justify-content: {{knobSide}}"><span style="width: 22px; height: 22px; border-radius: 50%; background: #F3F1ED"></span></span>
+</button>
+
+<div style="flex: 1"></div>
+<button onClick="{{start}}" style="height: 56px; border-radius: 16px; border: 0; background: #FF7A3D; color: #0C0D0E; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.8 2.2-5 .2 1.6 1 2.6 2 3 0-3 .3-5.5.8-8z"></path></svg>{{startLabel}}</button>
+</div>
+</sc-if>
+
+<sc-if value="{{running}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 28px; flex: 1; padding-top: 24px">
+<div style="position: relative; width: 260px; height: 260px">
+<svg width="260" height="260" viewBox="0 0 260 260" role="img" aria-label="{{remaining}} remaining" style="display: block; transform: rotate(-90deg)">
+<circle cx="130" cy="130" r="110" style="fill: none; stroke: #1F2225; stroke-width: 10"></circle>
+<circle cx="130" cy="130" r="110" style="fill: none; stroke: #FF7A3D; stroke-width: 10; stroke-linecap: round; stroke-dasharray: {{dash}}"></circle>
+</svg>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+<span style="font-size: 13px; color: #A3A09A">Remaining</span>
+<span style="font-size: 56px; font-weight: 300; letter-spacing: -0.04em; line-height: 1">{{remaining}}</span>
+<span style="font-size: 13px; color: #A3A09A">{{ofLabel}}</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%">
+<div style="background: #16181A; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; color: #A3A09A">Pit</span>
+<span style="font-size: 28px; letter-spacing: -0.02em">186°<span style="font-size: 14px; color: #5FD08A; margin-left: 6px">↑ 9°/min</span></span>
+</div>
+<div style="background: #16181A; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; color: #A3A09A">Fan</span>
+<span style="font-size: 28px; letter-spacing: -0.02em">100%</span>
+</div>
+</div>
+
+<sc-if value="{{hold}}" hint-placeholder-val="{{ true }}">
+<p style="margin: 0; font-size: 14px; color: #A3A09A; text-align: center">Then holding pit at 250°</p>
+</sc-if>
+
+<div style="flex: 1"></div>
+<button onClick="{{stop}}" style="width: 100%; height: 56px; border-radius: 16px; border: 1px solid #2E3134; background: transparent; color: #F3F1ED; font-size: 16px; font-weight: 500; cursor: pointer">Stop</button>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const dur = st.dur || 10;
+    const hold = st.hold !== false;
+    const running = !!st.running;
+    const ranges = { 10: 'For 200–400°', 20: 'For 400–600°', 30: 'For 600°+ searing' };
+    const options = [10, 20, 30].map((m) => ({
+      min: m, title: m + ' min', range: ranges[m],
+      pressed: m === dur ? 'true' : 'false',
+      border: m === dur ? '#FF7A3D' : '#1F2225',
+      ring: m === dur ? '7px solid #FF7A3D' : '2px solid #3A3D40',
+      pick: () => this.setState({ dur: m })
+    }));
+    const elapsedFrac = 0.38;
+    const C = 2 * Math.PI * 110;
+    const remSec = Math.round(dur * 60 * (1 - elapsedFrac));
+    const remaining = Math.floor(remSec / 60) + ':' + String(remSec % 60).padStart(2, '0');
+    return {
+      options, dur, hold, running, choosing: !running, remaining,
+      startLabel: 'Start · ' + dur + ' min',
+      ofLabel: 'of ' + dur + ':00',
+      dash: (C * elapsedFrac).toFixed(1) + ' ' + C.toFixed(1),
+      holdPressed: hold ? 'true' : 'false',
+      trackBg: hold ? '#FF7A3D' : '#3A3D40',
+      knobSide: hold ? 'flex-end' : 'flex-start',
+      toggleHold: () => this.setState({ hold: !hold }),
+      start: () => this.setState({ running: true }),
+      stop: () => this.setState({ running: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
