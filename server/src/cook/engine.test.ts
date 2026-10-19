@@ -304,6 +304,19 @@ describe("ending", () => {
     expect(h.store.session(sessionId)?.endedBy).toBe("user");
   });
 
+  it("doesn't look done while the pit settles back to target after Fire it up", async () => {
+    const h = cookHarness({ scenario: "fireUp" });
+    await h.boot();
+    h.engine.fireUp(10, fToDeviceC(225));
+    await h.run(2 * HOUR);
+    expect(h.ofCook("fireUpFinished")).toHaveLength(1);
+    // Fire it up overshoots the hold target; falling back to it isn't a dying fire.
+    expect(Math.max(...h.store.readings(0, h.clock.now()).map((r) => r.pitC ?? 0))).toBeGreaterThan(
+      fToDeviceC(225) + 15,
+    );
+    expect(h.ofCook("looksDone")).toEqual([]);
+  });
+
   it("looks done when the pit falls for 15 min with the fan still on", async () => {
     const { h } = await cooking("pizza", [], fToDeviceC(500));
     await h.run(HOUR);

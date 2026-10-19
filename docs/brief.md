@@ -89,6 +89,31 @@ Mapped to the design artboards in `design/canvas/` (see `design/README.md`).
 9. **Settings** (not designed; keep it plain, same style): device status, IP, firmware, last seen;
    alert toggles and thresholds; test notification; install-to-home-screen help.
 
+Screen rules the designs leave open (decided in M4):
+
+- Home is **Live cook** while a session is open, otherwise **Idle**. Fire it up without a session
+  shows a "Fire it up · 6:12 left" strip on Idle that opens its running screen.
+- The header pill reads Offline, Connecting…, Fire it up · m:ss, Cooking · 6h 40m,
+  Stopped · 6h 40m (session open, fan off) or Ready.
+- When the session is open but the cook isn't running (Stop, the device's `sce`, another client),
+  Live cook offers **Fire it up** and **Resume at <target>** (Start), with **End cook** below.
+  End cook asks for confirmation first.
+- Pit status: Holding steady, Heating up, Cooling down (above target), Fan off (Cooling once
+  Looks done is up). Idle's pit card says "Not lit" under 150 °F.
+- Probe cards: an active item shows "est. 2h 10m", "Stalled" or "Done", and progress from the
+  probe's temperature when the item started. A plugged-in probe with no item is a "Probe N" card
+  that opens Targets; an empty slot is a slim "Not plugged in" row. A finished item shows the
+  "Came off at …" card with Reuse probe, which opens the food picker and returns to Live cook.
+- Notices on Live cook: grill offline (Retry reconnects the live stream; the server keeps polling
+  every 5 s), Ember halted, found a cook running, and another app changed the cook (both
+  dismissible).
+- Targets: the pit button saves the target (for the next Start when idle); the probe button sets
+  that probe's target. "Take it off this probe" (in a session) or "Clear" (before Start) removes
+  the food. The food picker's weight starts at the last weight used for that food, else empty;
+  + starts at 1.0 lb and −/+ repeat while held. A custom food pulls at 200° (fine-tuned on Targets).
+- History and Settings stay plain until M7 and M6: a list of past cooks, and the grill's status
+  with install help.
+
 ## Behaviour
 
 ### Starting
@@ -119,14 +144,15 @@ Mapped to the design artboards in `design/canvas/` (see `design/README.md`).
 - **End cook** (user) sends stop-cook and closes the session and any open items.
 - **Stop** turns the fan off (and ends Fire it up) but leaves the session open; Looks done takes it
   from there.
-- **Looks done:** when no items are active and the pit has been falling for 15 minutes (or the cook
-  is no longer active), show the in-app prompt and send a push. If there's no response, auto-end 60
-  minutes later (`ended_by: auto`, and stop the cook if it's still running). Keep going suppresses
-  it until the conditions clear and are met again. "No longer active" means Ember no longer intends
-  the cook to run (stopped by the user, by the device's own `sce`, or by another client), not the
-  raw `acs`, so the moment between Start and its read-back doesn't count. Once the prompt is up it
-  stays until new activity (a food on a probe, Start, a new pit target, Fire it up, or another
-  client starting the cook): a dying fire that levels off is still done.
+- **Looks done:** when no items are active and either the cook is no longer active or the pit has
+  been falling for 15 minutes below the target's holding band (a dying fire, not a pit settling
+  back after Fire it up overshoots), show the in-app prompt and send a push. If there's no
+  response, auto-end 60 minutes later (`ended_by: auto`, and stop the cook if it's still running).
+  Keep going suppresses it until the conditions clear and are met again. "No longer active" means
+  Ember no longer intends the cook to run (stopped by the user, by the device's own `sce`, or by
+  another client), not the raw `acs`, so the moment between Start and its read-back doesn't count.
+  Once the prompt is up it stays until new activity (a food on a probe, Start, a new pit target,
+  Fire it up, or another client starting the cook): a dying fire that levels off is still done.
 - A no-probe cook (pizza) uses the same rule on pit temperature alone.
 - Losing the connection never ends a session.
 - All thresholds above live in one config module (`server/src/config.ts`).
@@ -146,6 +172,11 @@ arrives on SSE as a `commandResult` event, so nothing waits on an offline device
   edits the active item or starts a new one (Reuse probe); otherwise sets it up for the next Start.
   `POST /api/probes/:slot/target {targetC}`, `DELETE /api/probes/:slot`.
 - `GET /api/catalog`, `/api/sessions`, `/api/sessions/:id`, `/api/readings?from&to`.
+- `GET /api/foods/recent`: the last 6 distinct foods put on probes, newest first, with the latest
+  weight given for each (the food picker's Recent list).
+- `LiveState.now` is the server's clock and `clockRate` how fast it runs (1, or `SIM_SPEED` with
+  the sped-up simulator). The client advances `now` between frames at that rate for elapsed times,
+  countdowns and estimates, so a 60× simulation reads right.
 
 ### Alerts (web push)
 

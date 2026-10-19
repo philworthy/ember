@@ -131,6 +131,11 @@ export interface LiveProbe {
 
 export interface LiveState {
   now: number;
+  /**
+   * How fast the server clock runs against real time: 1, or SIM_SPEED with the sped-up
+   * simulator. The client advances `now` between frames at this rate.
+   */
+  clockRate: number;
   link: {
     state: DeviceLinkState;
     lastSeenMs: number | null;
@@ -169,6 +174,40 @@ export function foodName(food: Food | null, slot?: ProbeSlot): string {
   if (!food) return slot ? `Probe ${slot}` : "Probe";
   if ("custom" in food) return food.custom;
   return food.path[1] ?? food.path[0] ?? "Food";
+}
+
+/**
+ * Names for the UI: `name` for cards ("Brisket point"), `short` for chart chips ("Point").
+ * A sub-cut is joined to its cut ("Brisket point", "Baby back ribs") unless it already names the
+ * food ("Spare ribs").
+ */
+export function foodLabel(food: Food | null, slot?: ProbeSlot): { name: string; short: string } {
+  if (!food) {
+    const name = slot ? `Probe ${slot}` : "Probe";
+    return { name, short: name };
+  }
+  if ("custom" in food) return { name: food.custom, short: food.custom };
+  const [category, cut, sub] = food.path;
+  if (!cut) return { name: category ?? "Food", short: category ?? "Food" };
+  if (!sub) return { name: cut, short: cut };
+  const cutWords = cut.toLowerCase().split(/\W+/);
+  const subWords = sub.toLowerCase().split(/\W+/);
+  if (subWords.some((w) => w.length > 2 && cutWords.includes(w))) return { name: sub, short: sub };
+  // A plural cut reads after the sub-cut ("Baby back ribs"); otherwise before it ("Brisket point").
+  if (/s$/.test(cut)) return { name: `${sub} ${cut.toLowerCase()}`, short: sub };
+  // Lower-case the sub-cut's first letter unless it starts an abbreviation ("NY strip").
+  const lower = /^[A-Z][a-z]+(\s|$)/.test(sub);
+  const tail = lower ? sub[0]?.toLowerCase() + sub.slice(1) : sub;
+  return { name: `${cut} ${tail}`, short: sub };
+}
+
+/** A food recently put on a probe, for the food picker's Recent list. */
+export interface RecentFood {
+  food: Food;
+  /** The latest weight given for it, if any. */
+  weightLb: number | null;
+  targetC: number;
+  at: number;
 }
 
 /** The food catalog: category › cut › optional sub-cut; leaves carry the default "pull at". */

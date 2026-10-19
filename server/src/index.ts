@@ -55,7 +55,14 @@ const link = new DeviceLink(new DeviceClient(transport), {
   restore: linkRestoreFrom(store),
 });
 let logWarn: (msg: string, data?: unknown) => void = (msg, data) => console.warn(msg, data);
-const engine = new CookEngine({ store, link, clock, catalog, log: (m, d) => logWarn(m, d) });
+const engine = new CookEngine({
+  store,
+  link,
+  clock,
+  catalog,
+  clockRate: env.useSimulator ? env.simSpeed : 1,
+  log: (m, d) => logWarn(m, d),
+});
 const app = await buildApp({ engine, store, catalog, clock, logger: true });
 logWarn = (msg, data) => app.log.warn({ data }, msg);
 

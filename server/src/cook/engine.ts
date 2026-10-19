@@ -85,6 +85,8 @@ export interface CookEngineOptions {
   link: DeviceLink;
   clock: Clock;
   catalog: Catalog;
+  /** How fast `clock` runs against real time (the sped-up simulator); 1 by default. */
+  clockRate?: number;
   log?: (msg: string, data?: unknown) => void;
 }
 
@@ -103,6 +105,7 @@ export class CookEngine extends EventEmitter<EngineEvents> {
   private readonly link: DeviceLink;
   private readonly clock: Clock;
   private readonly catalog: Catalog;
+  private readonly clockRate: number;
   private readonly log: (msg: string, data?: unknown) => void;
 
   private session: Session | null;
@@ -121,6 +124,7 @@ export class CookEngine extends EventEmitter<EngineEvents> {
     this.link = opts.link;
     this.clock = opts.clock;
     this.catalog = opts.catalog;
+    this.clockRate = opts.clockRate ?? 1;
     this.log = opts.log ?? (() => {});
     this.session = this.store.openSession();
     this.restore();
@@ -329,6 +333,7 @@ export class CookEngine extends EventEmitter<EngineEvents> {
     const setups = this.setups();
     return {
       now,
+      clockRate: this.clockRate,
       link: {
         state: snap.link,
         lastSeenMs: snap.lastGoodReadingMs,
@@ -489,7 +494,8 @@ export class CookEngine extends EventEmitter<EngineEvents> {
 
   /**
    * Looks done: no active items, and the cook is no longer meant to run (stopped by the user, the
-   * device's sce or another client) or the pit has been falling for 15 min. Prompt once; end the
+   * device's sce or another client) or the pit has been falling for 15 min below the holding
+   * band (the fire is dying). Prompt once; end the
    * session if nobody answers within the hour. Once up, the prompt stays until there's new
    * activity (see `clearLooksDone`): a dying fire that levels off is still done. Keep going holds
    * it off until the conditions clear and come back.
@@ -497,8 +503,17 @@ export class CookEngine extends EventEmitter<EngineEvents> {
   private checkLooksDone(now: number): void {
     const s = this.session;
     if (!s) return;
-    const idle = this.link.snapshot.intent.kind === "idle";
-    const done = this.tracks.size === 0 && (idle || pitFalling(this.buffers.pit));
+    const intent = this.link.snapshot.intent;
+    const idle = intent.kind === "idle";
+    // While holding, a pit falling back to its target (Fire it up overshot, or the target was
+    // lowered) isn't a dying fire: only a fall below the holding band counts.
+    const pitC = this.latest?.pitC ?? null;
+    const dying =
+      intent.kind === "cook" &&
+      pitC !== null &&
+      pitC < intent.tptC - COOK.holdingBandC &&
+      pitFalling(this.buffers.pit);
+    const done = this.tracks.size === 0 && (idle || dying);
     if (s.looksDoneAt !== null) {
       if (now < s.looksDoneAt + COOK.looksDone.autoEndAfterMs) return;
       if (!idle) this.issue({ kind: "stop" });

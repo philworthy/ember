@@ -13,6 +13,7 @@ import type {
   ItemStats,
   ProbeSlot,
   Reading,
+  RecentFood,
   Session,
   SessionOrigin,
   TargetChange,
@@ -145,6 +146,9 @@ export class Store {
       lastItem: p(
         "SELECT * FROM items WHERE session_id = ? AND slot = ? ORDER BY started_at DESC, id DESC LIMIT 1",
       ),
+      recentFoodItems: p(
+        "SELECT * FROM items WHERE food IS NOT NULL ORDER BY started_at DESC, id DESC LIMIT 200",
+      ),
       insertItem: p(
         `INSERT INTO items (session_id, slot, food, weight_lb, target_c, started_at)
          VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
@@ -270,6 +274,27 @@ export class Store {
   lastItem(sessionId: number, slot: ProbeSlot): Item | null {
     const row = this.q.lastItem.get(sessionId, slot) as Row | undefined;
     return row ? toItem(row) : null;
+  }
+
+  /** The last `limit` distinct foods put on probes, newest first, with their latest weight. */
+  recentFoods(limit = 6): RecentFood[] {
+    const out = new Map<string, RecentFood>();
+    for (const item of (this.q.recentFoodItems.all() as Row[]).map(toItem)) {
+      if (!item.food) continue;
+      const key = JSON.stringify(item.food);
+      const seen = out.get(key);
+      if (seen) {
+        seen.weightLb ??= item.weightLb;
+      } else if (out.size < limit) {
+        out.set(key, {
+          food: item.food,
+          weightLb: item.weightLb,
+          targetC: item.targetC,
+          at: item.startedAt,
+        });
+      }
+    }
+    return [...out.values()];
   }
 
   insertItem(i: {

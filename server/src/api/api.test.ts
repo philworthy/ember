@@ -108,6 +108,23 @@ describe("REST commands", () => {
     expect(readings[0]).toHaveProperty("pitC");
     expect((await app.inject("/api/readings?from=0&to=999999999999")).statusCode).toBe(400);
   });
+
+  it("lists recent foods, newest first, once each, with the latest weight given", async () => {
+    const { h, app } = await setup();
+    const put = (slot: number, payload: object) =>
+      app.inject({ method: "PUT", url: `/api/probes/${slot}`, payload });
+    await app.inject({ method: "POST", url: "/api/cook/start", payload: { pitC: 121 } });
+    await h.run(10 * SEC);
+    await put(1, { food: { path: ["Beef", "Brisket", "Flat"] }, weightLb: 6.5 });
+    await put(2, { food: { custom: "Goat shoulder" }, targetC: fToC(200) });
+    await put(3, { food: { path: ["Beef", "Brisket", "Flat"] } });
+    const recent = (await app.inject("/api/foods/recent")).json();
+    expect(recent).toEqual([
+      expect.objectContaining({ food: { path: ["Beef", "Brisket", "Flat"] }, weightLb: 6.5 }),
+      expect.objectContaining({ food: { custom: "Goat shoulder" }, weightLb: null }),
+    ]);
+    expect(((await app.inject("/api/state")).json() as LiveState).clockRate).toBe(1);
+  });
 });
 
 describe("SSE", () => {

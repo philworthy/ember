@@ -101,6 +101,7 @@ export function registerRoutes(
   // ---- Reads ----
 
   app.get("/api/catalog", async () => catalog.tree);
+  app.get("/api/foods/recent", async () => store.recentFoods());
 
   app.get<{ Querystring: { limit?: number; before?: number } }>(
     "/api/sessions",
