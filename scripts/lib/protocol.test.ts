@@ -43,11 +43,21 @@ describe("decodeData", () => {
     expect(d.t1C).toBeNull();
   });
 
-  it("marks readings invalid while the device clock is unset", () => {
+  it("marks readings invalid while the device clock is unset (seconds since boot)", () => {
     expect(decodeData({ ...base, time: "12" }).valid).toBe(false);
-    expect(decodeData({ ...base, time: "39" }).valid).toBe(false);
-    expect(decodeData({ ...base, time: "40" }).valid).toBe(true);
+    expect(decodeData({ ...base, time: "197" }).valid).toBe(false); // seen on 1.0.56 after boot
+    expect(decodeData({ ...base, time: "259" }).valid).toBe(false);
+    expect(decodeData({ ...base, time: "1599999999" }).valid).toBe(false);
+    expect(decodeData({ ...base, time: "1600000000" }).valid).toBe(true);
     expect(decodeData({ ...base, time: undefined as unknown as string }).valid).toBe(false);
+  });
+
+  it("decodes the real idle response from firmware 1.0.56", () => {
+    const raw = "time=259&rm=0&acs=0&csid=&cm=0&ag=0&as=0&pt=22&t1=22&t2=21&t3=22&dc=0&tpt=0 ";
+    const d = decodeData(parseQs(raw));
+    expect(d).toMatchObject({ valid: false, cookActive: false, pitC: 22, t2C: 21, targetPitC: 0 });
+    expect([d.sce, d.p, d.tftC]).toEqual([null, null, null]);
+    expect(d.other).toEqual({});
   });
 
   it("decodes the core fields", () => {

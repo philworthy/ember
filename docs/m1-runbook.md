@@ -26,16 +26,14 @@ Commands are `npm run device -- <command>`. The checklist item each step resolve
    `protocol.md`. Note any field not in the `data` table (it shows up as `other`).
 2. **Probe sentinel** [unplugged value]. With P2 and P3 unplugged, does `data` show `400` or
    `-400`? Unclip the pit probe for one `data` call to see `pt`'s sentinel, then plug it back in.
-3. **Power cycle** [`time` after power cycle]. Pull the controller's power for 10 s and plug it back
-   in. In the `watch` terminal, note the `time` values right after boot, how long until it's a real
-   Unix time, and whether it sets itself or waits for us. If it stays low after 2 minutes, run
-   `stop` (which sends `ct`) and see whether that sets the clock.
+3. **Power cycle**. Done 2026-10-18: `time` counts seconds since boot until the device sets its
+   own clock (45 s to 5+ min), or until any command's `ct` sets it.
 4. **Content type** [JSON header with form body]. Run `start --pit 225`. If `acs` changes 0 → 1,
    the references' JSON header is accepted. Then `stop --form-header`. If `acs` goes back to 0,
    the correct form header works too. If the first didn't take, try `start --pit 225 --form-header`.
 5. **Start, retarget, stop** [behave as described]. `start --pit 225`, wait for the fan to respond
-   (on a cold grill it should run high). `start --pit 250`: `tpt` should change, `acs` stays 1, and
-   `sce` moves forward. Then `stop`. Optional, useful for recovery: start again, power-cycle during
+   (on a cold grill it should run high). `start --pit 250`: `tpt` should change and `acs` stays 1.
+   Note whether `sce`, `p` and `tft` appear in `data` during a cook (they're absent while idle). Then `stop`. Optional, useful for recovery: start again, power-cycle during
    the cook, and see whether the cook is still active after the reboot.
 6. **Pit target above 260 °C** [`tpt` > 260]. `start --pit 700`. Read `tpt` back in the "Changed"
    output: 371 means accepted, 260 means clamped, and no change or an HTTP error means rejected.

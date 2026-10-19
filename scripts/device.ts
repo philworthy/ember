@@ -42,7 +42,8 @@ if (!process.env.EMBER_SKIP_DOTENV && existsSync(path.join(ROOT, ".env"))) {
 
 /** Pause between a command and the follow-up `data` read, so the device has time to react. */
 const SETTLE_MS = Number(process.env.EMBER_SETTLE_MS ?? 3000);
-const OFFLINE_AFTER_FAILURES = 3;
+/** protocol.md › Quirks 5: streaks of 3 failures happen while the device is fine. */
+const OFFLINE_AFTER_FAILURES = 5;
 
 const nowS = () => Math.floor(Date.now() / 1000);
 const stamp = () => new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
@@ -141,8 +142,13 @@ async function sendWithConfirmation(
   if (before) console.log(`\nNow:   ${statusLine(before)}`);
   await confirm(client, title, build, contentType, opts.notes);
 
-  const res = await client.postCook(build(nowS()), contentType);
-  console.log(`\nSent.  HTTP ${res.status}  ${res.body.trim() || "(empty body)"}`);
+  // A reset POST is not applied (protocol.md › Quirks 5), so read back the state either way.
+  try {
+    const res = await client.postCook(build(nowS()), contentType);
+    console.log(`\nSent.  HTTP ${res.status}  ${res.body.trim() || "(empty body)"}`);
+  } catch (err) {
+    console.log(`\nSEND FAILED: ${(err as Error).message}. Checking whether it was applied…`);
+  }
 
   await sleep(SETTLE_MS);
   const after = await trySnapshot(client);

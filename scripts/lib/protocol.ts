@@ -24,8 +24,11 @@ const KNOWN_DATA_FIELDS = [
 
 const SENTINELS = new Set(["400", "-400"]);
 
-/** Below this the device has just booted and has no clock yet. */
-export const MIN_VALID_DEVICE_TIME = 40;
+/**
+ * Until its clock is set, the device reports seconds since boot (seen: 197, then 259 a minute
+ * later), so any `time` before 2020-09-13 means the clock is unset and the reading is dropped.
+ */
+export const MIN_VALID_DEVICE_TIME = 1_600_000_000;
 
 /** Responses are URL-encoded query strings. Every value is a string; first value wins. */
 export function parseQs(raw: string): Record<string, string> {

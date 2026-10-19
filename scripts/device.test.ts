@@ -93,6 +93,17 @@ describe("device CLI", () => {
     expect(stub.requests).toHaveLength(0);
   });
 
+  it("a reset POST is reported and the state is still read back", async () => {
+    const { code, out, stub } = await run(["start", "--pit", "250"], "yes\n", {
+      stub: { resetPosts: true },
+    });
+    expect(code, out).toBe(0);
+    expect(out).toContain("SEND FAILED");
+    expect(out).toMatch(/After: .*acs=0/);
+    expect(out).toContain("Changed: nothing");
+    expect(stub.state.acs).toBe("0");
+  });
+
   it("start can set a device food-probe target for testing", async () => {
     const { code, out, stub } = await run(
       ["start", "--pit", "225", "--probe", "1", "--probe-target", "90"],

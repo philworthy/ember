@@ -1,4 +1,5 @@
 import { appendFileSync, mkdirSync } from "node:fs";
+import { connect } from "node:net";
 import path from "node:path";
 import { encodeForm, type Payload, parseQs } from "./protocol.ts";
 
@@ -25,12 +26,29 @@ export interface DeviceClientOptions {
   transcriptPath?: string;
 }
 
+/**
+ * Parse the device's HTTP response leniently. Firmware 1.0.56 sends two status lines
+ * (`HTTP/1.0 200 OK` then `HTTP/1.1 200 OK`), no headers, a bare `\n` before the body, and no
+ * Content-Length, which strict parsers such as Node's fetch reject (see protocol.md › Basics).
+ */
+export function parseHttpResponse(raw: string): { status: number; body: string } {
+  const status = /^HTTP\/\d\.\d (\d{3})/.exec(raw);
+  if (!status?.[1]) throw new Error(`not an HTTP response: ${JSON.stringify(raw.slice(0, 40))}`);
+  const end = /\r?\n\r?\n/.exec(raw);
+  return { status: Number(status[1]), body: end ? raw.slice(end.index + end[0].length) : "" };
+}
+
 export class DeviceClient {
   readonly baseUrl: string;
+  private readonly host: string;
+  private readonly port: number;
   private readonly timeoutMs: number;
   private readonly transcriptPath: string | undefined;
 
   constructor(host: string, opts: DeviceClientOptions = {}) {
+    const [name, port] = host.split(":");
+    this.host = name ?? host;
+    this.port = port ? Number(port) : 80;
     this.baseUrl = `http://${host}/cgi-bin/`;
     this.timeoutMs = opts.timeoutMs ?? 8000;
     this.transcriptPath = opts.transcriptPath;
@@ -51,26 +69,53 @@ export class DeviceClient {
     body?: string,
     contentType?: string,
   ): Promise<DeviceResponse> {
-    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "ikamand" };
-    if (contentType) headers["Content-Type"] = contentType;
-    const url = this.baseUrl + endpoint;
     this.log(
-      `> ${method} ${url}${contentType ? ` [${contentType}]` : ""}${body ? ` ${body}` : ""}`,
+      `> ${method} ${this.baseUrl}${endpoint}${contentType ? ` [${contentType}]` : ""}${body ? ` ${body}` : ""}`,
     );
+    const lines = [
+      `${method} /cgi-bin/${endpoint} HTTP/1.1`,
+      `Host: ${this.host}`,
+      "Accept: application/json",
+      "User-Agent: ikamand",
+      "Connection: close",
+    ];
+    if (body !== undefined) {
+      if (contentType) lines.push(`Content-Type: ${contentType}`);
+      lines.push(`Content-Length: ${Buffer.byteLength(body)}`);
+    }
+    const request = `${lines.join("\r\n")}\r\n\r\n${body ?? ""}`;
+
     try {
-      const res = await fetch(url, {
-        method,
-        headers,
-        body,
-        signal: AbortSignal.timeout(this.timeoutMs),
-      });
-      const text = await res.text();
-      this.log(`< ${res.status} ${text.trim()}`);
-      return { status: res.status, body: text, fields: parseQs(text) };
+      const raw = await this.exchange(request);
+      const { status, body: text } = parseHttpResponse(raw);
+      this.log(`< ${status} ${text.trim()}`);
+      return { status, body: text, fields: parseQs(text) };
     } catch (err) {
       this.log(`! ${(err as Error).message}`);
       throw err;
     }
+  }
+
+  /** Send the request and read until the device closes the connection. */
+  private exchange(request: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const socket = connect({ host: this.host, port: this.port });
+      const timer = setTimeout(() => {
+        socket.destroy();
+        reject(new Error(`timed out after ${this.timeoutMs} ms`));
+      }, this.timeoutMs);
+      socket.on("connect", () => socket.write(request));
+      socket.on("data", (c: Buffer) => chunks.push(c));
+      socket.on("error", (err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+      socket.on("close", (hadError) => {
+        clearTimeout(timer);
+        if (!hadError) resolve(Buffer.concat(chunks).toString("latin1"));
+      });
+    });
   }
 
   private log(line: string): void {

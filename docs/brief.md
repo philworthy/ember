@@ -147,6 +147,10 @@ HomeKit or Home Assistant integration; multiple users or logins; cloud; Wi-Fi pr
 iKamand; supporting other controllers. Celsius display is out for now, but keep conversion in one
 place so it could be added.
 
-## Open questions (resolve during milestone 1, record in `protocol.md`)
+## Open questions (resolved in milestone 1, details in `protocol.md`)
 
-- Fire it up method A or B; behaviour of `tpt` above 260 °C; what `p`/`tft` does on the device.
+- Fire it up uses method B. Method A does nothing on firmware 1.0.56.
+- The device accepts `tpt` up to 371 °C (700 °F). Whether it can hold the pit there is deferred to
+  the first pizza cook.
+- The device's own `p`/`tft` probe target does nothing visible, so Ember keeps all probe targets
+  on the server.
