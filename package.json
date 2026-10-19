@@ -16,7 +16,8 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit -p server && tsc --noEmit -p shared && tsc --noEmit -p scripts && npm run typecheck --workspace client",
     "build": "npm run build --workspace client",
-    "device": "tsx scripts/device.ts"
+    "device": "tsx scripts/device.ts",
+    "sim": "npm run sim --workspace server --"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

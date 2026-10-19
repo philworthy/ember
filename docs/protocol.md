@@ -20,7 +20,7 @@ from that session live in `captures/` (git-ignored) on Phil's Mac.
   Strict parsers reject this: Node's `fetch` fails with "Invalid header token" and curl with
   "Header without colon". Python `requests` (used by both references) tolerates it. Ember uses a
   raw TCP client that reads until close, takes the status from the first line, and treats
-  everything after the first blank line as the body (`scripts/lib/client.ts`).
+  everything after the first blank line as the body (`server/src/device/transport.ts`).
 - Responses are **URL-encoded query strings**, not JSON (e.g. `acs=1&tpt=121&pt=118&t1=64&...`).
   Parse with a query-string parser; every value arrives as a string. Trim the body first, because
   of the trailing space.
@@ -89,7 +89,8 @@ acs=0  csid=""  tpt=0  sce=0  p=0  tft=0  as=0  ct=<now>
   `sce=<now + minutes*60>`. `dc` went to 100% at once on a cold grill. **The device ends the cook
   itself at `sce`:** 1 s after `sce` it read `acs=0 rm=0 dc=0`, while `tpt` stayed 260. A self-stop
   leaves `tpt` set; our stop zeroes it. Ember still runs its own timer and sends a full stop at the
-  end, so either one stops the fan (see Safety).
+  end, so either one stops the fan (see Safety). With "then hold", Ember sets `sce` 2 min past its
+  timer, so it can switch to the hold target before the device stops itself.
 
 **Device food-probe target:** `p=<1-3>  tft=<°C>` on top of an active cook. The firmware only holds
 one. **Reaching it does nothing visible** (VERIFIED 2026-10-18): with `p=1 tft=29`, P1 was warmed by
@@ -109,16 +110,26 @@ tracks all probe targets on the server.
    a cold grill (`time=19 … pt=84&t1=84`, `time=24 … pt=108`, `time=29 … pt=132`, then
    `time=35 … pt=23`). A command's `ct` can set the clock inside that window, so also ignore any
    reading that jumps more than 50 °C from the previous one within 10 s.
-3. **Cook recovery after a reboot or clock drift.** Port the HA logic (`connection_recovery` in
-   `reference/ha-ikamand/ikamand.py`), but run it only once per reconnect, not once per poll. A
-   rebooted device shows a huge clock skew on every poll until its clock is set. Trigger it when
-   the device comes back after being offline, or when its clock is more than 60 s from the
-   server's. Then: if Ember has an open session that should be active, and the last good reading
-   is under 10 minutes old, resend the start-cook command with the last target. Otherwise send
-   stop. Wait for ~30 s of sane readings first (quirk 2), because the controller acts on the
-   garbage too. This matters because **a cook does not survive a reboot** (VERIFIED: a 107 °C cook
-   was active, Phil power-cycled the controller, and it came back with `acs=0 rm=0 tpt=0`). The
-   server's session state is the source of truth, not the device.
+3. **Cook recovery after a reboot or clock drift.** Adapted from the HA logic
+   (`connection_recovery` in `reference/ha-ikamand/ikamand.py`), but run only once per reconnect,
+   not once per poll. A rebooted device shows a huge clock skew on every poll until its clock is
+   set. Trigger it at server start, when the device comes back after being offline, on any
+   reading with an unset clock, or when its clock is more than 60 s from the server's. Wait for
+   ~30 s of sane readings first (quirk 2; while the clock is unset, a reading counts from 35 s of
+   uptime), because the controller acts on the garbage too. Then reconcile once
+   (`server/src/device/machine.ts`):
+   - Ember has a cook → resend start at its target, **however long the device was gone** (Phil,
+     2026-10-18; HA's rule stopped the cook after 10 min offline). Losing the connection never
+     ends a session, and a kamado holds its fire through a long outage.
+   - Fire it up still running → resend it with `sce` at its original end. Already over → stop,
+     or start at the hold target with "then hold".
+   - No cook, and the device is cooking → **adopt it**: track it at the device's `tpt` and resend
+     start so it has a known `sce`. Unless Ember itself stopped it last; then stop.
+   - Otherwise → stop (harmless when idle; its `ct` sets the clock).
+
+   This matters because **a cook does not survive a reboot** (VERIFIED: a 107 °C cook was active,
+   Phil power-cycled the controller, and it came back with `acs=0 rm=0 tpt=0`). The server's
+   state is the source of truth, not the device.
 4. **Partial command payloads:** the HA code sometimes sends only some fields. Ember always sends the
    full command so the device state is predictable.
 5. **Flaky HTTP:** one failed poll is not "offline".
@@ -126,11 +137,12 @@ tracks all probe targets on the server.
      `ECONNRESET`, 5 timeouts at 8 s. With HA off, resets still happened, mostly when two of our
      clients overlapped (see Commands).
    - Failures came in streaks of up to **3** while the device was otherwise fine, so 3 consecutive
-     failures is too eager. Mark the device offline after **30 s with no good reading** (about 5
-     failed polls). Retry on the next poll; don't retry immediately.
+     failures is too eager. Mark the device offline after **30 s with no successful response**
+     (about 5 failed polls). A device that answers with an unset clock is reachable: Ember shows
+     it as "recovering", not offline. Retry on the next poll; don't retry immediately.
    - A POST that gets `ECONNRESET` is **not applied** (VERIFIED: a retarget to 121 was reset and
      `tpt` stayed 107). After every command, read `data` back and resend the full command if the
-     state doesn't match.
+     state doesn't match. Ember checks `acs` and `tpt` on the next poll and sends at most 3 times.
    - Once, with HA also polling, the web server went away for ~2½ min while the controller stayed on
      (timeouts, then `ECONNREFUSED`, while it still answered ping). It came back by itself with the
      cook intact.
@@ -139,7 +151,9 @@ tracks all probe targets on the server.
 
 - Ember must never be the reason the fan keeps running unattended. If the server crashes, the device
   still stops at `sce`, so never set `sce` more than 24 h ahead, and re-extend it during long cooks
-  (e.g. every hour, push `sce` to now + 24 h).
+  (every hour, Ember pushes `sce` to now + 24 h). Stopping or redeploying the server leaves a cook
+  running on purpose; `sce` is the backstop. If the device logic keeps failing (12 polls in a
+  row), the server sends a best-effort stop and stops polling.
 - Fire it up must have a server-side timer and a device-side `sce`. Either one stops it.
 - On server start, read the device state and reconcile it with the DB before sending anything.
 - **Ember must be the only client.** The device has no arbitration, so any client's command wins.
@@ -151,10 +165,11 @@ tracks all probe targets on the server.
   **Disabling that integration is not enough:** `async_setup_entry` starts the poll loop with a
   bare `hass.loop.create_task` and unload never cancels it (`reference/ha-ikamand/__init__.py`),
   so it kept restarting the cook (15 s after the next stop) until HA was restarted. Disable it and
-  then restart Home Assistant. Ember should also treat any `acs` or `tpt`
-  change it didn't command as "another client is controlling the device": log it, and surface it
-  in the UI. The exception is the device's own `sce` stop: `acs` 1 → 0 with `tpt` unchanged at or
-  just after the `sce` Ember set.
+  then restart Home Assistant. Ember also treats any `acs` or `tpt`
+  change it didn't command as "another client is controlling the device": it logs it, surfaces it
+  in the UI, and **follows the device rather than fighting it** (fighting is how Ember and HA
+  ping-ponged). The exception is the device's own `sce` stop: `acs` 1 → 0 with `tpt` unchanged at
+  or just after the `sce` Ember set.
 
 ## Temperature limits
 
@@ -162,6 +177,11 @@ tracks all probe targets on the server.
   (371 °C) for pizza. The device **accepts** `tpt` above 260 (VERIFIED 2026-10-18: 371 read back
   as 371). So Ember sends the real target and doesn't need the "can't hold above 500°" fallback,
   unless the first hot cook shows the controller can't actually hold it (deferred until then).
+
+## Simulator
+
+`server/src/sim/` reproduces everything above for tests and dev mode (`npm run sim -- --help`).
+When the real device turns out to differ, fix the simulator in the same change as this doc.
 
 ## Milestone 1 test checklist
 

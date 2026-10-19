@@ -1,18 +1,11 @@
 // Minimal fake iKamand for CLI tests: records requests and applies cook payloads to its state.
-// Not the simulator (milestone 2); it only speaks the wire format, including firmware 1.0.56's
-// malformed HTTP framing, so a raw TCP server stands in for node:http.
+// Not the simulator (server/src/sim): it keeps method A "working" so the CLI's fallback stop can
+// be tested, which 1.0.56 (and so the simulator) doesn't do. The wire framing is the simulator's.
 
 import { type AddressInfo, createServer, type Socket } from "node:net";
-import { parseQs } from "../lib/protocol.ts";
+import { deviceResponse, parseRequest, type RecordedRequest } from "@ember/server/sim";
 
-export interface RecordedRequest {
-  method: string;
-  path: string;
-  /** Lower-cased header names. */
-  headers: Record<string, string>;
-  body: string;
-  fields: Record<string, string>;
-}
+export type { RecordedRequest };
 
 export interface StubOptions {
   /** Ignore `ag=0`, to exercise the CLI's fallback stop. */
@@ -27,26 +20,6 @@ export interface Stub {
   posts: () => RecordedRequest[];
   state: Record<string, string>;
   close: () => Promise<void>;
-}
-
-/** Exactly what firmware 1.0.56 sends: two status lines, no headers, bare LF, trailing space. */
-export function deviceResponse(body: string): string {
-  return `HTTP/1.0 200 OK\r\nHTTP/1.1 200 OK\r\n\n${body} `;
-}
-
-function parseRequest(raw: string): RecordedRequest | null {
-  const end = raw.indexOf("\r\n\r\n");
-  if (end < 0) return null;
-  const [requestLine = "", ...headerLines] = raw.slice(0, end).split("\r\n");
-  const headers: Record<string, string> = {};
-  for (const line of headerLines) {
-    const colon = line.indexOf(":");
-    if (colon > 0) headers[line.slice(0, colon).toLowerCase()] = line.slice(colon + 1).trim();
-  }
-  const body = raw.slice(end + 4);
-  if (body.length < Number(headers["content-length"] ?? 0)) return null;
-  const [method = "", url = ""] = requestLine.split(" ");
-  return { method, path: url.replace("/cgi-bin/", ""), headers, body, fields: parseQs(body) };
 }
 
 export async function startStub(opts: StubOptions = {}): Promise<Stub> {

@@ -18,12 +18,19 @@ Work through the checklist in `protocol.md` with Phil at the grill.
 example responses captured in the doc.
 
 ## M2 — Device client + simulator
-`server/device/`: a typed client, a poller, and the recovery/reconcile logic as a testable state
-machine. `server/sim/`: a fake iKamand HTTP server that speaks the same protocol, with scripted
-scenarios: brisket with a stall, pizza at 700, a probe unplugged mid-cook, meat removed, a device
-reboot mid-cook, flaky responses. Speed-up factor for fast playback.
-**Done when:** unit tests cover parsing, sentinels, recovery and offline detection against the
-simulator.
+`server/src/device/`: a typed client that sends one request at a time, a poller, and the
+recovery/reconcile logic as a pure, testable state machine. It handles everything M1 found
+(`protocol.md`): the malformed HTTP framing, read-back and full resend after every command,
+offline after 30 s without an answer, dropping readings while the clock is unset or after a
+> 50 °C jump, recovery once per reconnect after ~30 s of sane readings, remembering the `sce` it
+sent, Fire it up by method B, and spotting another client controlling the device.
+`server/src/sim/`: a fake iKamand that reproduces firmware 1.0.56 (the framing, resets that drop a
+POST, the post-boot garbage window, the unset clock, the `sce` self-stop, the cook lost on reboot),
+with scripted scenarios: brisket with a stall, pizza at 700, a probe unplugged mid-cook, meat
+removed, a device reboot mid-cook, a long outage, flaky responses, another client, Fire it up.
+Speed-up factor for playback (`npm run sim`).
+**Done when:** unit tests cover parsing, sentinels, request serialization, read-back and resend,
+recovery, offline detection and foreign-control detection against the simulator.
 
 ## M3 — Storage, sessions, API
 SQLite schema (readings, sessions, items, target changes, push subscriptions, settings), with

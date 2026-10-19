@@ -17,3 +17,9 @@ export interface Reading {
   /** Unparsed fields (rm, cm, as, ag, ...) kept verbatim for later study. */
   raw: Record<string, string>;
 }
+
+/**
+ * The server's link to the device. `recovering` is a reconnect (server start, back from offline,
+ * or a reboot) waiting for ~30 s of sane readings before it reconciles the cook.
+ */
+export type DeviceLinkState = "starting" | "online" | "recovering" | "offline";

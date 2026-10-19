@@ -89,8 +89,9 @@ Mapped to the design artboards in `design/canvas/` (see `design/README.md`).
 - **Fire it up** runs for the chosen time (see `protocol.md` for the method). With "then hold" on,
   it opens a session and switches to holding the pit target when the timer ends. With it off, the
   device stops when the timer ends, and no session is opened unless one already exists.
-- If readings show a live cook with no open session (e.g. after a server restart), reconcile it
-  using the safety rules in `protocol.md`.
+- If readings show a live cook with no open session (e.g. after a server restart), Ember adopts it:
+  it tracks the cook at the device's target and shows that it found one running (`protocol.md` ›
+  Quirks 3).
 
 ### Probes and items
 

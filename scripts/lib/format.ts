@@ -1,5 +1,5 @@
+import type { DecodedData, Payload } from "@ember/server/device";
 import { cToDisplayF } from "@ember/shared";
-import type { DecodedData, Payload } from "./protocol.ts";
 
 export function fmtTemp(c: number | null): string {
   return c === null ? "—" : `${cToDisplayF(c)}°F (${c}°C)`;

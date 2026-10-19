@@ -6,20 +6,10 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { fToDeviceC } from "@ember/shared";
-import { Command, InvalidArgumentError, Option } from "commander";
-import { type ContentTypeMode, DeviceClient } from "./lib/client.ts";
 import {
-  CSV_COLUMNS,
-  csvRow,
-  describeData,
-  describePayload,
-  diffFields,
-  fmtDuration,
-  statusLine,
-} from "./lib/format.ts";
-import {
+  type ContentTypeMode,
   type DecodedData,
+  DeviceClient,
   decodeData,
   encodeForm,
   GRILL_B_TPT_C,
@@ -30,7 +20,18 @@ import {
   parseRawPairs,
   startCook,
   stopCook,
-} from "./lib/protocol.ts";
+} from "@ember/server/device";
+import { fToDeviceC } from "@ember/shared";
+import { Command, InvalidArgumentError, Option } from "commander";
+import {
+  CSV_COLUMNS,
+  csvRow,
+  describeData,
+  describePayload,
+  diffFields,
+  fmtDuration,
+  statusLine,
+} from "./lib/format.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CAPTURES = path.join(ROOT, "captures");

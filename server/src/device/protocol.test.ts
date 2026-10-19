@@ -99,6 +99,11 @@ describe("command payloads match docs/protocol.md", () => {
 
   it("never schedules sce more than 24 h ahead", () => {
     expect(Number(startCook(107, NOW).sce) - NOW).toBeLessThanOrEqual(86400);
+    expect(startCook(107, NOW, undefined, NOW + 90_000).sce).toBe(NOW + 86400);
+  });
+
+  it("grill method B can leave the device running past the timer, for 'then hold'", () => {
+    expect(grillStartB(10, NOW, 120).sce).toBe(NOW + 600 + 120);
   });
 });
 

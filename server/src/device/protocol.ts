@@ -115,18 +115,19 @@ export const MAX_SCE_AHEAD_S = 86_400;
 
 /**
  * Start or retarget a cook. Ember always sends `p=0 tft=0`; `foodProbe` exists only so the CLI
- * can test the device's own food-probe target (UNVERIFIED in protocol.md).
+ * can test the device's own food-probe target (which does nothing visible on 1.0.56).
  */
 export function startCook(
   tptC: number,
   now: number,
   foodProbe?: { slot: 1 | 2 | 3; tftC: number },
+  sce: number = now + MAX_SCE_AHEAD_S,
 ): Payload {
   return {
     acs: 1,
     csid: "",
     tpt: Math.round(tptC),
-    sce: now + MAX_SCE_AHEAD_S,
+    sce: Math.min(sce, now + MAX_SCE_AHEAD_S),
     p: foodProbe?.slot ?? 0,
     tft: foodProbe ? Math.round(foodProbe.tftC) : 0,
     as: 0,
@@ -138,7 +139,10 @@ export function stopCook(now: number): Payload {
   return { acs: 0, csid: "", tpt: 0, sce: 0, p: 0, tft: 0, as: 0, ct: now };
 }
 
-/** Fire it up, method A: native grill mode. Partial payload, as the original library sends it. */
+/**
+ * Fire it up, method A: native grill mode. Partial payload, as the original library sends it.
+ * Does nothing on 1.0.56; kept only for the CLI.
+ */
 export function grillStartA(minutes: number, now: number): Payload {
   return { ag: 1, sge: now + Math.round(minutes * 60), ct: now };
 }
@@ -150,8 +154,12 @@ export function grillStopA(now: number): Payload {
 /** Fire it up, method B: a cook at 260 °C that the device ends at `sce` (and the caller also stops). */
 export const GRILL_B_TPT_C = 260;
 
-export function grillStartB(minutes: number, now: number): Payload {
-  return { ...startCook(GRILL_B_TPT_C, now), sce: now + Math.round(minutes * 60) };
+/**
+ * `sceGraceS` keeps the device running a little past the server's timer, for "then hold", so the
+ * switch to holding is seamless. Without it, the device stops itself exactly when the timer ends.
+ */
+export function grillStartB(minutes: number, now: number, sceGraceS = 0): Payload {
+  return startCook(GRILL_B_TPT_C, now, undefined, now + Math.round(minutes * 60) + sceGraceS);
 }
 
 export function grillStop(method: "a" | "b", now: number): Payload {
