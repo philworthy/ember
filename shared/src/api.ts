@@ -169,6 +169,50 @@ export interface LiveState {
   probes: LiveProbe[];
 }
 
+// ---- Alerts (web push) ----
+
+/** Which alerts are on, and their thresholds (docs/brief.md › Alerts). Bands are °C deltas. */
+export interface AlertPrefs {
+  itemAtTarget: boolean;
+  itemCameOff: boolean;
+  pitOffTarget: { on: boolean; bandC: number; forMin: number };
+  deviceOffline: { on: boolean; forMin: number };
+  fireUpFinished: boolean;
+  looksDone: boolean;
+}
+
+export type AlertType = keyof AlertPrefs | "test";
+
+/** What a push carries: kept small (iOS), and `url` is the screen a tap opens. */
+export interface PushPayload {
+  type: AlertType;
+  title: string;
+  body: string;
+  url: string;
+  tag: string;
+}
+
+/** `GET /api/push`. `publicKey` is the VAPID application server key (base64url). */
+export interface PushInfo {
+  publicKey: string;
+  prefs: AlertPrefs;
+  subscriptions: number;
+}
+
+export interface PushResult {
+  ok: boolean;
+  status?: number;
+  error?: string;
+}
+
+/** `GET /api/device`: what Settings shows about the grill. */
+export interface DeviceInfo {
+  source: "iKamand" | "simulator";
+  host: string | null;
+  firmware: string | null;
+  mac: string | null;
+}
+
 /** A short display name: the cut for catalog foods ("Brisket"), or the custom name. */
 export function foodName(food: Food | null, slot?: ProbeSlot): string {
   if (!food) return slot ? `Probe ${slot}` : "Probe";

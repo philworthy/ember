@@ -139,6 +139,31 @@ export const scenarios: Record<string, Scenario> = {
       );
     },
   },
+  alerts: {
+    name: "alerts",
+    description:
+      "Every alert in ~1.5 h: chicken on P1 at 350 °F, the fan unplugged for 12 min, a 3-min outage",
+    // Fire it up 10 min then hold 350 °F; put Chicken › Whole (165°) on P1. Afterwards, Stop.
+    cook: { fireUpMin: 10 },
+    durationS: 90 * 60,
+    setup: (sim) => {
+      sim.insertProbe(1, CHICKEN);
+      const M = 60_000;
+      // Pit off target: once the pit has held for 5 min, the fan stops for 12 min.
+      sim.schedule({ when: (s) => s.pitTempC() >= fToC(345), label: "pit at target" }, (s) => {
+        const t = s.clock.now();
+        s.schedule({ atMs: t + 5 * M, label: "fan unplugged" }, (x) => x.setFanPlugged(false));
+        s.schedule({ atMs: t + 17 * M, label: "fan plugged in" }, (x) => x.setFanPlugged(true));
+      });
+      // Reached target at 165 °F, then off the meat at 170 °F; 5 min later the grill drops off
+      // Wi-Fi for 3 min.
+      sim.schedule({ when: (s) => s.probeC(1) >= fToC(170), label: "chicken off" }, (s) => {
+        s.removeFromMeat(1);
+        const t = s.clock.now();
+        s.schedule({ atMs: t + 5 * M, label: "web server down 180 s" }, (x) => x.webOutage(180));
+      });
+    },
+  },
   fireUp: {
     name: "fireUp",
     description: "Cold grill, no probes; Fire it up for 10 min",

@@ -231,11 +231,14 @@ export function StepButton({
   label,
   onStep,
   disabled,
+  size,
 }: {
   kind: "dec" | "inc";
   label: string;
   onStep: () => void;
   disabled?: boolean;
+  /** Diameter in px (56 by default; at least 44 for touch). */
+  size?: number;
 }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const step = useRef(onStep);
@@ -262,6 +265,7 @@ export function StepButton({
       className="round-btn"
       aria-label={label}
       disabled={disabled}
+      style={size ? { width: size, height: size } : undefined}
       onPointerDown={(e) => {
         if (e.button !== 0) return;
         step.current();

@@ -111,8 +111,9 @@ Screen rules the designs leave open (decided in M4):
   that probe's target. "Take it off this probe" (in a session) or "Clear" (before Start) removes
   the food. The food picker's weight starts at the last weight used for that food, else empty;
   + starts at 1.0 lb and −/+ repeat while held. A custom food pulls at 200° (fine-tuned on Targets).
-- History and Settings stay plain until M7 and M6: a list of past cooks, and the grill's status
-  with install help.
+- History stays plain until M7: a list of past cooks. Settings (M6) has the grill's status,
+  alerts on this device (Turn on alerts, Send a test, Turn off), the alert toggles and thresholds,
+  and install help.
 
 ## Behaviour
 
@@ -190,6 +191,31 @@ arrives on SSE as a `commandResult` event, so nothing waits on an offline device
 | Looks done / auto-ended | on |
 
 Each alert has a short title, one line of body, and a tap target that opens the right screen.
+
+Decided in M6 (`server/src/push/`):
+
+- **Rules.** "Reached target" and "came off" fire with the item events. The pit alert arms once
+  the pit is inside the holding band of the current target, so it stays quiet while the pit
+  heats up to a new target, during Fire it up, and while Looks done is up. It fires once per
+  excursion, and re-arms when the pit is back in the holding band. "Offline" is measured from the
+  last good reading, needs an open session and the link to have given up (30 s without an
+  answer), and fires once per outage. "Fire it up finished" is only for the timer running out (a
+  Stop isn't news). Looks done and auto-ended share one toggle and one notification tag, so
+  "Cook ended" replaces the prompt.
+- **Settings** holds a toggle for each alert, plus the pit's ± band (10–100 °F) and minutes, and
+  the offline minutes (1–60). They're stored on the server for every device (`settings.alerts`),
+  with the band in °C like everything else.
+- **Payload:** `{type, title, body, url, tag}`, a few hundred bytes. Times are relative ("in
+  1h 00m"), so the sped-up simulator reads right. Taps open Live cook (`/#/`), except
+  auto-ended, which opens History. The tag is per item, session or Fire it up run, so a repeat
+  replaces the older notification instead of stacking.
+- **Keys:** the VAPID keys are generated on the server's first start into
+  `DATA_DIR/vapid.json` (or come from `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`). They must never
+  change: phones subscribe against the public key.
+- **iOS:** push exists only in the installed app, and permission is asked from the "Turn on
+  alerts" tap. The service worker shows a notification for every push (iOS drops the
+  subscriptions of apps that push silently). The app re-sends its subscription to the server
+  every time it opens, so a fresh database (or the simulator's) gets it without a tap.
 
 ### Estimates
 

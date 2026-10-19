@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyServerOptions } from "fastify";
+import { type PushDeps, registerPushRoutes } from "./api/push.ts";
 import { registerRoutes } from "./api/routes.ts";
 import { registerSse } from "./api/sse.ts";
 import type { Catalog } from "./cook/catalog.ts";
@@ -18,6 +19,8 @@ export interface AppDeps {
   store: Store;
   catalog: Catalog;
   clock: Clock;
+  /** Alerts API (absent in tests that don't need it). */
+  push?: Omit<PushDeps, "store">;
   logger?: FastifyServerOptions["logger"];
   /** Serve client/dist when it exists (production). */
   serveClient?: boolean;
@@ -35,6 +38,7 @@ export async function buildApp(deps: AppDeps) {
 
   app.get("/healthz", async () => ({ ok: true }));
   registerRoutes(app, deps);
+  if (deps.push) registerPushRoutes(app, { ...deps.push, store: deps.store });
   registerSse(app, deps.engine);
 
   // In production the client is built into client/dist and served from here.

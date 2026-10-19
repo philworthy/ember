@@ -116,6 +116,24 @@ function toReading(r: Row): Reading {
   };
 }
 
+export interface PushSubscriptionRow {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  userAgent?: string | null;
+  lastOkAt?: number | null;
+  lastError?: string | null;
+}
+
+function toPushSub(r: Row): PushSubscriptionRow {
+  return {
+    endpoint: String(r.endpoint),
+    keys: JSON.parse(String(r.keys)) as PushSubscriptionRow["keys"],
+    userAgent: (r.user_agent as string | null) ?? null,
+    lastOkAt: num(r.last_ok_at),
+    lastError: (r.last_error as string | null) ?? null,
+  };
+}
+
 const SLOT_COLUMN = { 1: "t1_c", 2: "t2_c", 3: "t3_c" } as const;
 
 export class Store {
@@ -172,6 +190,17 @@ export class Store {
         "INSERT INTO events (ts, session_id, type, data) VALUES (?, ?, ?, ?) RETURNING *",
       ),
       sessionEvents: p("SELECT * FROM events WHERE session_id = ? ORDER BY ts, id"),
+      upsertPush: p(
+        `INSERT INTO push_subscriptions (endpoint, keys, created_at, user_agent) VALUES (?, ?, ?, ?)
+         ON CONFLICT (endpoint) DO UPDATE SET keys = excluded.keys, user_agent = excluded.user_agent`,
+      ),
+      deletePush: p("DELETE FROM push_subscriptions WHERE endpoint = ?"),
+      pushSubs: p("SELECT * FROM push_subscriptions ORDER BY id"),
+      pushSub: p("SELECT * FROM push_subscriptions WHERE endpoint = ?"),
+      markPushOk: p(
+        "UPDATE push_subscriptions SET last_ok_at = ?, last_error = NULL WHERE endpoint = ?",
+      ),
+      markPushError: p("UPDATE push_subscriptions SET last_error = ? WHERE endpoint = ?"),
     };
   }
 
@@ -392,6 +421,31 @@ export class Store {
 
   sessionEvents(sessionId: number): CookEvent[] {
     return (this.q.sessionEvents.all(sessionId) as Row[]).map(toEvent);
+  }
+
+  // ---- Push subscriptions ----
+
+  /** Add a subscription, or refresh its keys (the app re-sends it every time it opens). */
+  upsertPushSubscription(s: PushSubscriptionRow, at: number): void {
+    this.q.upsertPush.run(s.endpoint, JSON.stringify(s.keys), at, s.userAgent ?? null);
+  }
+
+  deletePushSubscription(endpoint: string): boolean {
+    return this.q.deletePush.run(endpoint).changes > 0;
+  }
+
+  pushSubscriptions(): PushSubscriptionRow[] {
+    return (this.q.pushSubs.all() as Row[]).map(toPushSub);
+  }
+
+  pushSubscription(endpoint: string): PushSubscriptionRow | null {
+    const row = this.q.pushSub.get(endpoint) as Row | undefined;
+    return row ? toPushSub(row) : null;
+  }
+
+  markPush(endpoint: string, at: number, error: string | null): void {
+    if (error === null) this.q.markPushOk.run(at, endpoint);
+    else this.q.markPushError.run(error, endpoint);
   }
 
   transaction<T>(fn: () => T): T {

@@ -1,7 +1,17 @@
 // REST commands (docs/brief.md › API). Everything on the wire is °C. Commands answer 202 at once;
 // the device's read-back arrives later as a `commandResult` event on the live stream.
 
-import type { CatalogNode, Food, ProbeSlot, RecentFood, Session } from "@ember/shared";
+import type {
+  AlertPrefs,
+  CatalogNode,
+  DeviceInfo,
+  Food,
+  ProbeSlot,
+  PushInfo,
+  PushResult,
+  RecentFood,
+  Session,
+} from "@ember/shared";
 import { toast } from "./ui/toast.tsx";
 
 export interface Accepted {
@@ -60,4 +70,13 @@ export const api = {
   catalog: () => request<CatalogNode[]>("GET", "/api/catalog"),
   recentFoods: () => request<RecentFood[]>("GET", "/api/foods/recent"),
   sessions: () => request<Session[]>("GET", "/api/sessions?limit=50"),
+
+  push: () => request<PushInfo>("GET", "/api/push"),
+  subscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    request<unknown>("POST", "/api/push/subscriptions", sub),
+  unsubscribe: (endpoint: string) =>
+    request<unknown>("DELETE", "/api/push/subscriptions", { endpoint }),
+  setAlerts: (prefs: AlertPrefs) => request<AlertPrefs>("PUT", "/api/alerts", prefs),
+  testPush: (endpoint: string) => request<PushResult>("POST", "/api/push/test", { endpoint }),
+  device: () => request<DeviceInfo>("GET", "/api/device"),
 };

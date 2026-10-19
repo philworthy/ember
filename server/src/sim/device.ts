@@ -220,6 +220,11 @@ export class SimDevice {
     return this.probes[slot].tempC;
   }
 
+  /** The pit's true temperature right now, without advancing time (safe inside `when`). */
+  pitTempC(): number {
+    return this.pitC;
+  }
+
   /** True (un-noised) temperatures and firmware state, without going through HTTP. */
   get truth() {
     this.advance();

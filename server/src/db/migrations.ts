@@ -99,4 +99,10 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX events_session ON events (session_id, ts);
   CREATE INDEX events_ts ON events (ts);
   `,
+  // 2: M6 — the outcome of the last push to each subscription
+  `
+  ALTER TABLE push_subscriptions ADD COLUMN user_agent TEXT;
+  ALTER TABLE push_subscriptions ADD COLUMN last_ok_at INTEGER;
+  ALTER TABLE push_subscriptions ADD COLUMN last_error TEXT;
+  `,
 ];

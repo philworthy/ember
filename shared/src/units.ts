@@ -27,3 +27,8 @@ export function fDeltaToC(f: number): number {
 export function cDeltaToF(c: number): number {
   return (c * 9) / 5;
 }
+
+/** A pit target (device °C) → the °F it was picked as: pit targets go in 5 °F steps. */
+export function pitTargetF(c: number): number {
+  return Math.round(cToF(c) / 5) * 5;
+}

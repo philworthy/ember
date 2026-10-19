@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { startLive } from "./live.ts";
+import { syncPush } from "./push.ts";
 import "./index.css";
 
 const root = document.getElementById("root");
@@ -20,8 +21,19 @@ createRoot(root).render(
 // The service worker only in production builds: in dev it would fight Vite's hot reload.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((err) => {
-      console.warn("service worker registration failed", err);
-    });
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => syncPush())
+      .catch((err) => {
+        console.warn("service worker registration or push sync failed", err);
+      });
   });
 }
+
+// A tapped alert in an open app: the service worker asks to show the alert's screen.
+navigator.serviceWorker?.addEventListener("message", (e: MessageEvent) => {
+  const data = e.data as { type?: string; url?: string } | null;
+  if (data?.type === "open" && typeof data.url === "string") {
+    location.hash = new URL(data.url, location.origin).hash || "#/";
+  }
+});

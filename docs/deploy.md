@@ -78,12 +78,52 @@ docker/ember/
 5. Optional: once it works, replace the auth key in the project's YAML with a dummy value. The
    login is kept in `tailscale/state`. If that folder is ever deleted, Ember needs a new key.
 
+### 5. Turn on alerts
+
+1. Open Ember **from the home screen icon** (push only works in the installed app on iOS), then
+   Settings › **Turn on alerts**, and allow notifications.
+2. **Send a test.** "Sent" means the NAS reached Apple's push service; the notification should
+   arrive a few seconds later.
+
+There is nothing to set up on the NAS. On its first start Ember generates its push (VAPID) keys
+into `data/vapid.json` and keeps them. **Don't delete or replace that file:** phones subscribe
+against its public key, so new keys mean turning alerts on again on every phone. It's in `data/`,
+so the backup covers it. (`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` in the YAML would override it,
+but you don't need them.)
+
+Pushes go out from the `ember` container to Apple (`web.push.apple.com`, HTTPS). The container
+shares the sidecar's network, but in userspace mode Tailscale only handles tailnet traffic:
+internet traffic leaves through Docker's normal bridge and the NAS, the same way Ember reaches the
+grill on the LAN. Pushes also reach the phone when Tailscale is off on it.
+
 ## Updating
 
 Push to `main` and wait for the build to go green, then pull the new image the same way as your
 other GitHub-image projects, and restart the `ember` project. The database (`data/`) and the
 Tailscale login (`tailscale/state/`) persist across updates. To roll back, set the image to a
 specific `sha-…` tag from the image page.
+
+## Testing alerts with the simulator
+
+The installed app only takes pushes from `ember.<tailnet>.ts.net`, so alerts are tested by running
+the NAS instance on the simulator for a while. Don't do it during a real cook: while it's on, Ember
+doesn't watch or control the grill (any cook carries on to the grill's own end time).
+
+1. Container Manager › Project › ember › **Stop**, then edit the YAML and uncomment the three lines
+   under "Testing alerts with the simulator" (`USE_SIMULATOR`, `SIM_SCENARIO: alerts`,
+   `SIM_SPEED: "20"`). Save and start it. The `ember` log shows `device: simulator (alerts, 20×)`.
+   Simulated cooks go to `data/ember-sim.db`, never into the real history.
+2. Open Ember on the phone. It re-registers for alerts by itself (check Settings says they're on;
+   Send a test if in doubt).
+3. Settings › Alert me when: everything on. On Idle, put **Poultry › Chicken › Whole** on probe 1,
+   then **Fire it up** 10 min with "Then hold pit at 350°". At 20× the scenario then runs by
+   itself, in about 3 minutes:
+   **Fire it up done**, then **Pit is … below target** (the simulated fan is unplugged for a
+   while), **Chicken is at 165°**, **Chicken came off**, and **Grill offline** (a 3-min outage).
+4. Once the grill is back, tap **Stop**: **Looks like you're done** arrives, and about 3 minutes
+   later **Cook ended**. Tap a notification to check it opens Live cook (History for Cook ended).
+5. Stop the project, comment the three lines out again, and start it. Open the app (it
+   re-registers with the real database) and Send a test.
 
 ## Rules while Ember runs on the NAS
 
@@ -97,8 +137,8 @@ specific `sha-…` tag from the image page.
 
 ## Data and backups
 
-`docker/ember/data` holds `ember.db` (every reading, cook and item) and `food-catalog.json` (the
-editable catalog). Include it in Hyper Backup. A backup taken while Ember is writing can catch the
+`docker/ember/data` holds `ember.db` (every reading, cook and item), `food-catalog.json` (the
+editable catalog) and `vapid.json` (the push keys). Include it in Hyper Backup. A backup taken while Ember is writing can catch the
 database mid-write, so for a copy you'd rely on (before a risky update, say), stop the project
 first and copy the whole `data` folder, including the `ember.db-wal` file if there is one.
 
@@ -111,3 +151,7 @@ first and copy the whole `data` folder, including the `ember.db-wal` file if the
 | The browser can't reach `ember.<tailnet>.ts.net` | The phone isn't on Tailscale, or the `tailscale` container isn't logged in (check its log and the Machines page). |
 | A certificate error, or HTTPS doesn't load | HTTPS Certificates aren't enabled in the Tailscale DNS settings, or `serve.json` is a folder instead of a file (step 2). |
 | "Add to Home Screen" makes a plain bookmark | The page wasn't loaded over HTTPS, or wasn't fully loaded yet. Reload, then try again. |
+| Settings says to add Ember to the Home Screen | It's open in Safari, not the installed app. Open it from the home screen icon. |
+| Send a test fails | The error comes from Apple's push service or the network. Check the `ember` log for `push:` lines. To test the NAS's way out: Container Manager › Container › ember › Terminal › Create › `sh`, then `node -e "fetch('https://web.push.apple.com').then(r => console.log(r.status), e => console.log(e.message))"` (any status code means it got through). |
+| Test says sent, but nothing arrives | iPhone Settings › Notifications › Ember: allow notifications, and check Focus isn't hiding them. |
+| Settings shows "Turn on alerts" again | The phone's subscription expired or was removed (Apple said it's gone), or `vapid.json` changed. Turn alerts on again. |

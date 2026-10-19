@@ -15,15 +15,7 @@ export function deg(c: number | null | undefined): string {
 const MIN = 60_000;
 const HOUR = 60 * MIN;
 
-/** "6h 40m", "45m", "<1m". */
-export function duration(ms: number): string {
-  const totalMin = Math.floor(Math.max(0, ms) / MIN);
-  if (totalMin < 1) return "<1m";
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin - h * 60;
-  if (!h) return `${m}m`;
-  return `${h}h ${String(m).padStart(2, "0")}m`;
-}
+export { duration } from "@ember/shared";
 
 /** "4:05" (rounded up, so it reads 0:00 only at the end). */
 export function countdown(ms: number): string {

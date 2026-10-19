@@ -31,6 +31,11 @@ services:
     environment:
       IKAMAND_HOST: 10.0.4.98
       TZ: America/New_York
+      # Testing alerts with the simulator (docs/deploy.md): uncomment, restart, run the cook in
+      # the app; comment out again afterwards. Ember doesn't control the grill meanwhile.
+      # USE_SIMULATOR: "true"
+      # SIM_SCENARIO: alerts
+      # SIM_SPEED: "20"
     volumes:
       - ./data:/data
     # A clean stop leaves any running cook to the grill's own end time (protocol.md › Safety).

@@ -65,8 +65,8 @@ Dockerfile and `docker-compose.yml`: the app, plus a Tailscale sidecar (`TS_AUTH
 installed to the home screen, and shows live readings from the real device.
 
 ## M6 — Alerts
-Web Push with VAPID keys from `.env`; subscribe flow in Settings; the alert rules from the brief;
-a test-notification button.
+Web Push with VAPID keys (generated into `/data` on first start, or from the environment);
+subscribe flow in Settings; the alert rules from the brief; a test-notification button.
 **Done when:** each alert type fires on the installed iPhone PWA during a simulated cook.
 
 ## M7 — History

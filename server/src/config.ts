@@ -3,7 +3,7 @@
 // Device timing (offline, recovery, sce) lives with the state machine in device/machine.ts.
 
 import path from "node:path";
-import { fDeltaToC, fToC, fToDeviceC } from "@ember/shared";
+import { type AlertPrefs, fDeltaToC, fToC, fToDeviceC } from "@ember/shared";
 
 const SEC = 1000;
 const MIN = 60 * SEC;
@@ -50,6 +50,26 @@ export const COOK = {
   defaultPitC: fToDeviceC(225),
 };
 
+/** Alert defaults (docs/brief.md › Alerts) and the limits Settings may set them to. */
+export const ALERTS = {
+  defaults: {
+    itemAtTarget: true,
+    itemCameOff: true,
+    pitOffTarget: { on: true, bandC: fDeltaToC(25), forMin: 10 },
+    deviceOffline: { on: true, forMin: 2 },
+    fireUpFinished: true,
+    looksDone: true,
+  } satisfies AlertPrefs,
+  limits: {
+    bandC: { min: fDeltaToC(10), max: fDeltaToC(100) },
+    forMin: { min: 1, max: 60 },
+  },
+  /** How long a push waits at the push service for a phone that's off (then it's dropped). */
+  ttlS: 3600,
+  /** Settings' test notification gives up after this long. */
+  testTimeoutMs: 10_000,
+};
+
 export interface Env {
   port: number;
   dataDir: string;
@@ -57,6 +77,9 @@ export interface Env {
   simSpeed: number;
   simScenario: string | null;
   ikamandHost: string | null;
+  /** VAPID keys from the environment; otherwise they're generated into DATA_DIR/vapid.json. */
+  vapid: { publicKey: string; privateKey: string } | null;
+  vapidSubject: string;
 }
 
 /** `root` resolves a relative DATA_DIR (the repo root in dev; DATA_DIR=/data in Docker). */
@@ -76,5 +99,11 @@ export function loadEnv(env: NodeJS.ProcessEnv, root: string): Env {
     simSpeed,
     simScenario: env.SIM_SCENARIO?.trim() || null,
     ikamandHost: host,
+    vapid:
+      env.VAPID_PUBLIC_KEY?.trim() && env.VAPID_PRIVATE_KEY?.trim()
+        ? { publicKey: env.VAPID_PUBLIC_KEY.trim(), privateKey: env.VAPID_PRIVATE_KEY.trim() }
+        : null,
+    // Apple rejects a mailto: at localhost; a real URL keeps a personal address out of it.
+    vapidSubject: env.VAPID_SUBJECT?.trim() || "https://github.com/philworthy/ember",
   };
 }

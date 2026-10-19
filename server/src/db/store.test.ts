@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { MIGRATIONS } from "./migrations.ts";
 import { migrate, openDb } from "./open.ts";
 import { Store } from "./store.ts";
 
 describe("migrations", () => {
   it("migrate an empty database and are idempotent", () => {
     const db = openDb(":memory:");
-    expect(db.pragma("user_version", { simple: true })).toBe(1);
-    expect(migrate(db)).toBe(1);
+    expect(db.pragma("user_version", { simple: true })).toBe(MIGRATIONS.length);
+    expect(migrate(db)).toBe(MIGRATIONS.length);
     const tables = (
       db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all() as {
         name: string;

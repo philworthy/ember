@@ -35,6 +35,23 @@
         "dev"
       ],
       "port": 5173
+    },
+    {
+      "name": "server-sim-alerts",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "EMBER_PORT=8090",
+        "USE_SIMULATOR=true",
+        "SIM_SPEED=20",
+        "SIM_SCENARIO=alerts",
+        "DATA_DIR=./data/sim-alerts",
+        "npm",
+        "run",
+        "start",
+        "--workspace",
+        "server"
+      ],
+      "port": 8090
     }
   ]
 }
