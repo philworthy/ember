@@ -1,0 +1,38 @@
+# Ember on the NAS: a Container Manager project (docs/deploy.md has the steps).
+# Paste this as the project's YAML, then replace tskey-auth-REPLACE_ME with your auth key.
+# Paths are relative to the project folder, e.g. /volume1/docker/ember.
+
+services:
+  # Puts Ember on the tailnet as "ember" and serves it over HTTPS at
+  # https://ember.<tailnet>.ts.net, with a certificate from Tailscale.
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: ember
+    environment:
+      # Needed for the first start only; the login is then kept in ./tailscale/state.
+      TS_AUTHKEY: tskey-auth-REPLACE_ME
+      TS_HOSTNAME: ember
+      TS_STATE_DIR: /var/lib/tailscale
+      # Userspace networking: no /dev/net/tun needed on DSM.
+      TS_USERSPACE: "true"
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ./tailscale/state:/var/lib/tailscale
+      - ./tailscale/serve.json:/config/serve.json:ro
+    restart: unless-stopped
+
+  ember:
+    image: ghcr.io/philworthy/ember:latest
+    # Shares the sidecar's network: reachable only through the tailnet (no LAN port), while
+    # outgoing requests to the grill still go out over the LAN.
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    environment:
+      IKAMAND_HOST: 10.0.4.98
+      TZ: America/New_York
+    volumes:
+      - ./data:/data
+    # A clean stop leaves any running cook to the grill's own end time (protocol.md › Safety).
+    stop_grace_period: 15s
+    restart: unless-stopped

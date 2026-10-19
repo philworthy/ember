@@ -56,4 +56,5 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
   `npm run device -- --help` lists commands; `docs/m1-runbook.md` is the test order
 - `npm run sim -- --scenario brisket --speed 60 [--start]` — standalone simulator on port 8081
   (`--help` lists scenarios); point the CLI at it with `IKAMAND_HOST=127.0.0.1:8081`
-- Deploy: milestone 5.
+- Deploy: push to `main`; GitHub Actions (`.github/workflows/image.yml`) tests, builds and
+  publishes `ghcr.io/philworthy/ember:latest`, which the NAS pulls (`docs/deploy.md`)
