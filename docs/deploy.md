@@ -9,6 +9,17 @@ Ember runs on the Synology as a Container Manager project with two containers:
 Ember has no login: being on the tailnet is the access control, so anyone on your tailnet can
 control the grill. It has no port on the home LAN.
 
+First deployed and verified 2026-10-19: HTTPS with a valid certificate on the iPhone, installed to
+the home screen, live readings from the grill, and Fire it up from the app.
+
+**Why a second Tailscale, when the NAS already runs the Tailscale package?** That's deliberate.
+The package puts the NAS on the tailnet; the sidecar puts Ember there as its own device. That
+gives it its own name and certificate, keeps it off the LAN, and needs no setup on the NAS. Using
+the NAS's package instead would mean opening a LAN port for Ember, setting up `tailscale serve`
+over SSH outside this project, and an address of `<nas-name>.<tailnet>.ts.net`. Changing the
+address later means reinstalling the app on the phone and allowing notifications again. The
+sidecar costs one more device in Tailscale and a few tens of MB of memory.
+
 ## How the image gets built
 
 Every push to `main` runs `.github/workflows/image.yml`. It runs lint, typecheck and the tests,

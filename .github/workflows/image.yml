@@ -5,6 +5,8 @@ name: image
 on:
   push:
     branches: [main]
+    # Docs-only pushes don't change the image. (Not docs/**: the image copies food-catalog.json.)
+    paths-ignore: ["**/*.md"]
   workflow_dispatch:
 
 permissions:
