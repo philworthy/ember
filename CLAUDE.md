@@ -25,9 +25,11 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
 
 - The server is the only thing that talks to the device. The client never calls the iKamand.
 - The device speaks °C. Store raw device values; convert in one module; the UI shows °F.
-- Tests and dev mode use the simulator. Only scripts in `scripts/` may touch the real device, and
-  only when `IKAMAND_HOST` is set. Anything that starts a cook on the real grill must ask for
-  confirmation on the command line first.
+- Tests and dev mode use the simulator. Only the deployed server on the NAS and `scripts/` (when
+  `IKAMAND_HOST` is set) touch the real device, and **never both at once**: two clients fight over
+  the grill (`docs/protocol.md` › Safety), so stop the `ember` project in Container Manager before
+  using the device CLI. Anything that starts a cook on the real grill must ask for confirmation on
+  the command line first.
 - Safety: an app error must never leave the fan running unattended. See `docs/protocol.md` › Safety.
 - When behaviour of the real device differs from `docs/protocol.md`, update that doc in the same change.
 - Secrets live in `.env` (git-ignored). Keep `.env.example` current.
@@ -47,7 +49,7 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
   the LAN, for the phone), which proxies `/api` and `/healthz` to the server. With `USE_SIMULATOR=true` the server runs the
   simulator in-process (`SIM_SCENARIO`, `SIM_SPEED`) and uses `DATA_DIR/ember-sim.db`; otherwise it
   talks to `IKAMAND_HOST` and uses `DATA_DIR/ember.db`
-- `npm test` / `npm run test:watch` — Vitest across `shared/`, `server/`, `scripts/`
+- `npm test` / `npm run test:watch` — Vitest across `shared/`, `server/`, `client/`, `scripts/`
 - `npm run lint` (Biome; `npm run format` to fix) and `npm run typecheck`
 - `npm run build` — builds `client/dist`, which the server serves in production (the service
   worker registers only in builds, and only on `localhost` or HTTPS)

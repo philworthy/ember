@@ -75,6 +75,7 @@ describe("device CLI", () => {
     expect(Math.abs(Number(f.ct) - nowS())).toBeLessThan(10);
     expect(Number(f.sce) - Number(f.ct)).toBe(86400);
     expect(out).toContain("acs: 0 → 1");
+    expect(out).toContain("Is the ember project on the NAS stopped?");
   });
 
   it.each([

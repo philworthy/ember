@@ -3,6 +3,19 @@
 One milestone per working session or so. Start each in plan mode, and commit when its
 "done when" checks pass.
 
+## Status
+
+| Milestone | Done | Commit | Checked by |
+|---|---|---|---|
+| M0 Scaffold | 2026-10-17 | `ddb7393` | clean-clone install, test and dev |
+| M1 Protocol spike | 2026-10-18 | `827cff1` | Phil at the grill; results in `protocol.md` |
+| M2 Device client + simulator | 2026-10-18 | `034d243` | tests |
+| M3 Storage, sessions, API | 2026-10-19 | `eae10b2` | tests, 60× brisket run |
+| M4 Live UI | 2026-10-19 | `6b6dc3d` | Phil, simulated cook on Mac and phone |
+| M5 Deploy to the NAS | 2026-10-19 | `5b494ae` | Phil, iPhone over Tailscale with the real grill |
+
+Next: M6.
+
 ## M0 — Scaffold
 Monorepo-lite: `server/`, `client/`, `shared/` (types and unit conversion), `scripts/`. TypeScript,
 lint, Vitest, dev script that runs server + client with hot reload. Fill in the Commands section of

@@ -41,6 +41,9 @@ if (!process.env.EMBER_SKIP_DOTENV && existsSync(path.join(ROOT, ".env"))) {
   process.loadEnvFile(path.join(ROOT, ".env"));
 }
 
+const ONE_CLIENT_NOTE =
+  "Is the ember project on the NAS stopped? Two clients fight over the grill (protocol.md › Safety).";
+
 /** Pause between a command and the follow-up `data` read, so the device has time to react. */
 const SETTLE_MS = Number(process.env.EMBER_SETTLE_MS ?? 3000);
 /** protocol.md › Quirks 5: streaks of 3 failures happen while the device is fine. */
@@ -127,6 +130,7 @@ async function confirm(
   console.log(describePayload(preview, nowS()));
   console.log(`  body: ${encodeForm(preview)}`);
   for (const note of notes) console.log(`  ! ${note}`);
+  console.log(`  ! ${ONE_CLIENT_NOTE}`);
   const answer = await ask('\nType "yes" to send: ');
   if (answer.trim().toLowerCase() !== "yes") die("Not sent.");
 }

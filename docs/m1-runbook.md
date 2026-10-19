@@ -7,6 +7,9 @@ it reads `data` again and prints what changed. Requests and responses are append
 
 ## Before you start
 
+- If Ember is deployed, **stop the `ember` project in Container Manager first**, and start it again
+  when you're done. The NAS server polls the grill all the time, and two clients fight over it
+  (`protocol.md` › Safety).
 - `cp .env.example .env` and check that `IKAMAND_HOST` is right. The Mac must be on the home LAN.
 - Grill **cold**, no lit charcoal. Controller powered on, pit probe clipped in, **probe 1 plugged
   in, probes 2 and 3 unplugged**. Fan attached and in view. You stay at the grill for every step that
