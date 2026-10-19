@@ -61,6 +61,24 @@ jobs:
         if: always()
         run: docker logs ember || true
 
+      # The NAS may be ARM: check the native SQLite module and tsx load there too (under QEMU).
+      - name: Build for the ARM check
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          tags: ember:arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: ARM check
+        run: |
+          docker run --rm --platform linux/arm64 ember:arm64 node --import tsx -e "
+            const Database = (await import('better-sqlite3')).default;
+            const db = new Database(':memory:');
+            console.log('sqlite', db.prepare('select sqlite_version() v').get().v, process.arch);
+          "
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io

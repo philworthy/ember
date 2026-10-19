@@ -9,7 +9,9 @@ COPY package.json package-lock.json ./
 COPY shared/package.json shared/
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm ci
+# --ignore-scripts: nothing here needs an install script (esbuild's binary comes from its
+# per-platform package), and better-sqlite3's would try to compile it with node-gyp.
+RUN npm ci --ignore-scripts
 COPY tsconfig.base.json ./
 COPY shared/ shared/
 COPY client/ client/
@@ -23,7 +25,9 @@ COPY package.json package-lock.json ./
 COPY shared/package.json shared/
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm ci --omit=dev --workspace @ember/server && npm cache clean --force
+# better-sqlite3 loads its prebuilt Linux x64/arm64 binary, so it must not be compiled (no python
+# or compiler in this image).
+RUN npm ci --omit=dev --workspace @ember/server --ignore-scripts && npm cache clean --force
 COPY tsconfig.base.json ./
 COPY shared/ shared/
 COPY server/ server/
