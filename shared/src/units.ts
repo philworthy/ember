@@ -17,3 +17,13 @@ export function fToDeviceC(f: number): number {
 export function cToDisplayF(c: number): number {
   return Math.round(cToF(c));
 }
+
+/** A temperature difference in °F → °C (no 32 offset), e.g. "a 15 °F drop". */
+export function fDeltaToC(f: number): number {
+  return (f * 5) / 9;
+}
+
+/** A temperature difference in °C → °F. */
+export function cDeltaToF(c: number): number {
+  return (c * 9) / 5;
+}

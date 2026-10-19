@@ -181,6 +181,7 @@ tracks all probe targets on the server.
 ## Simulator
 
 `server/src/sim/` reproduces everything above for tests and dev mode (`npm run sim -- --help`).
+With `USE_SIMULATOR=true` the server runs it in-process on the same clock.
 When the real device turns out to differ, fix the simulator in the same change as this doc.
 
 ## Milestone 1 test checklist

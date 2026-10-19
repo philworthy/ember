@@ -111,12 +111,12 @@ describe("device CLI", () => {
     );
     expect(code, out).toBe(0);
     expect(stub.posts()[0]?.fields).toMatchObject({ p: "1", tft: "32" });
-    expect(out).toContain("Device food-probe target p=1 tft=32: UNVERIFIED");
+    expect(out).toContain("Device food-probe target p=1 tft=32: does nothing visible on 1.0.56");
   });
 
-  it("start warns above 260 °C", async () => {
+  it("start notes that holding above 260 °C is untested", async () => {
     const { out } = await run(["start", "--pit", "700"], "no\n");
-    expect(out).toContain("tpt=371 is above 260 °C: UNVERIFIED");
+    expect(out).toContain("tpt=371 is above 260 °C: accepted on 1.0.56");
   });
 
   it("refuses to run without IKAMAND_HOST", async () => {

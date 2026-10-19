@@ -37,11 +37,20 @@ iPhone PWA ──HTTPS (Tailscale)──▶ ember server (Docker on NAS) ──H
   while it's off. This is the permanent record. Sessions and items are labelled time windows over it.
 - **Session (a cook):** start, end (nullable while open), pit target history (a list of changes),
   Fire it up usage, title (generated from item names, editable), notes, ended_by
-  (`user` / `auto` / `timeout`).
+  (`user` / `auto` / `timeout`). `auto` is the looks-done auto-end; `timeout` is reserved and unused,
+  because losing the connection never ends a session. Origin: `user` (Start), `fireUp` (Fire it
+  up with "then hold"), `adopted` (found running), `foreign` (another client started it).
 - **Item (one food on one probe):** session id, probe slot (1–3), food path (e.g.
-  `["Beef","Brisket","Point"]`) or custom name, weight in lb (optional), target °F, start, end,
+  `["Beef","Brisket","Point"]`) or custom name, weight in lb (optional), target, start, end,
   end reason (`removed` / `unplugged` / `session_end` / `user`), and derived stats saved at the end:
-  time to target, stall start/end/temps, average pit while it cooked.
+  time to target, stall start/end/temps, average pit while it cooked. Also the temperature it came
+  off at.
+- **Units:** every temperature in the DB and the API is °C. Pit targets are the device's integers;
+  probe targets are exact conversions of the °F the user picked (203 °F → 95.0 °C), since only the
+  server uses them. The client converts with `shared/src/units.ts`.
+- Implemented in `server/src/db/` (schema in `migrations.ts`). The server also keeps target changes,
+  Fire it up runs, settings (including the device link's intent, so a restart resumes the cook),
+  push subscriptions and an event log.
 - **Food catalog:** a tree of category › cut › sub-cut with a default "pull at" temperature. Seed
   it from `docs/food-catalog.json` and keep it editable (a JSON file in `/data` is fine).
   Custom names are stored on the item and also remembered for the Recent list.
@@ -87,8 +96,9 @@ Mapped to the design artboards in `design/canvas/` (see `design/README.md`).
 - **Start cook** opens a session, sends start-cook with the pit target, and opens items for any
   probe that has a food assigned.
 - **Fire it up** runs for the chosen time (see `protocol.md` for the method). With "then hold" on,
-  it opens a session and switches to holding the pit target when the timer ends. With it off, the
-  device stops when the timer ends, and no session is opened unless one already exists.
+  it opens a session when Fire it up starts (so the heat-up is part of the cook) and switches to
+  holding the pit target when the timer ends. With it off, the device stops when the timer ends,
+  and no session is opened unless one already exists.
 - If readings show a live cook with no open session (e.g. after a server restart), Ember adopts it:
   it tracks the cook at the device's target and shows that it found one running (`protocol.md` ›
   Quirks 3).
@@ -107,12 +117,35 @@ Mapped to the design artboards in `design/canvas/` (see `design/README.md`).
 ### Ending
 
 - **End cook** (user) sends stop-cook and closes the session and any open items.
+- **Stop** turns the fan off (and ends Fire it up) but leaves the session open; Looks done takes it
+  from there.
 - **Looks done:** when no items are active and the pit has been falling for 15 minutes (or the cook
   is no longer active), show the in-app prompt and send a push. If there's no response, auto-end 60
-  minutes later. Keep going suppresses it until the conditions are met again.
+  minutes later (`ended_by: auto`, and stop the cook if it's still running). Keep going suppresses
+  it until the conditions clear and are met again. "No longer active" means Ember no longer intends
+  the cook to run (stopped by the user, by the device's own `sce`, or by another client), not the
+  raw `acs`, so the moment between Start and its read-back doesn't count. Once the prompt is up it
+  stays until new activity (a food on a probe, Start, a new pit target, Fire it up, or another
+  client starting the cook): a dying fire that levels off is still done.
 - A no-probe cook (pizza) uses the same rule on pit temperature alone.
 - Losing the connection never ends a session.
-- All thresholds above live in one config module.
+- All thresholds above live in one config module (`server/src/config.ts`).
+
+### API
+
+REST under `/api`, JSON, °C. Commands answer `202 {id, sessionId}` at once; the device's read-back
+arrives on SSE as a `commandResult` event, so nothing waits on an offline device.
+
+- `GET /api/state`: the live state (link, latest reading, cook, Fire it up countdown, session with
+  its looks-done and auto-end times, three probes with item or setup and estimate).
+- `GET /api/live`: SSE. `state` on connect and after every change, `event` for each domain event.
+- `POST /api/cook/start {pitC}`, `/api/cook/target {pitC}` (saved for the next Start when nothing
+  is running), `/api/cook/stop`, `/api/cook/end`, `/api/fire-up {minutes, thenHoldC}`,
+  `/api/session/keep-going`.
+- `PUT /api/probes/:slot {food: {path} | {custom} | null, weightLb?, targetC?}`: during a session,
+  edits the active item or starts a new one (Reuse probe); otherwise sets it up for the next Start.
+  `POST /api/probes/:slot/target {targetC}`, `DELETE /api/probes/:slot`.
+- `GET /api/catalog`, `/api/sessions`, `/api/sessions/:id`, `/api/readings?from&to`.
 
 ### Alerts (web push)
 

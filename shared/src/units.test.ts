@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cToDisplayF, cToF, fToC, fToDeviceC } from "./units.ts";
+import { cDeltaToF, cToDisplayF, cToF, fDeltaToC, fToC, fToDeviceC } from "./units.ts";
 
 describe("units", () => {
   it("converts °C to °F", () => {
@@ -23,5 +23,11 @@ describe("units", () => {
   it("rounds to whole °F for display", () => {
     expect(cToDisplayF(121)).toBe(250);
     expect(cToDisplayF(96)).toBe(205);
+  });
+
+  it("converts differences without the 32° offset", () => {
+    expect(fDeltaToC(9)).toBe(5);
+    expect(fDeltaToC(15)).toBeCloseTo(8.33, 2);
+    expect(cDeltaToF(5)).toBe(9);
   });
 });

@@ -8,6 +8,7 @@ import {
   type Command,
   type DeviceEvent,
   type Effect,
+  type Intent,
   initialState,
   type MachineState,
   type Restore,
@@ -20,6 +21,11 @@ import { type Payload, stopCook } from "./protocol.ts";
 type EventMap = { [E in DeviceEvent as E["type"]]: [Omit<E, "type">] };
 
 export type DeviceEvents = EventMap & {
+  /**
+   * The intent or the sce Ember sent changed. Emitted before that step's sends go out, so a server
+   * that saves it (M3) knows its cook before the device does.
+   */
+  intent: [{ intent: Intent; sceSentS: number | null }];
   /** A POST went out (ok) or failed on the wire. Read-back decides whether it was applied. */
   sent: [{ payload: Payload; reason: SendReason; ok: boolean; error?: string }];
   /** The state machine threw. */
@@ -141,6 +147,7 @@ export class DeviceLink extends EventEmitter<DeviceEvents> {
 
   private async apply(input: Parameters<typeof step>[1]): Promise<void> {
     let effects: Effect[];
+    const before = this.state;
     try {
       const next = this.step(this.state, input, this.clock.now());
       this.state = next.state;
@@ -149,6 +156,10 @@ export class DeviceLink extends EventEmitter<DeviceEvents> {
     } catch (err) {
       await this.onFault(err as Error);
       return;
+    }
+    const { intent, sceSentS } = this.state;
+    if (sceSentS !== before.sceSentS || JSON.stringify(intent) !== JSON.stringify(before.intent)) {
+      this.emit("intent", { intent, sceSentS });
     }
     for (const effect of effects) {
       if (effect.type === "send") await this.send(effect.payload, effect.reason);

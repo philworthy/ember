@@ -239,12 +239,12 @@ async function cmdStart(opts: {
   const notes = [`Starts a cook. The device stops itself at sce (24 h) unless you run "stop".`];
   if (tptC > GRILL_B_TPT_C) {
     notes.push(
-      `tpt=${tptC} is above 260 °C: UNVERIFIED on this firmware. Watch the fan and check what tpt reads back.`,
+      `tpt=${tptC} is above 260 °C: accepted on 1.0.56, but whether the controller holds it is untested until a hot cook (protocol.md › Temperature limits).`,
     );
   }
   if (foodProbe) {
     notes.push(
-      `Device food-probe target p=${foodProbe.slot} tft=${foodProbe.tftC}: UNVERIFIED. It may end the cook when reached.`,
+      `Device food-probe target p=${foodProbe.slot} tft=${foodProbe.tftC}: does nothing visible on 1.0.56; Ember tracks probe targets itself.`,
     );
   }
   const client = makeClient(logEnabled());

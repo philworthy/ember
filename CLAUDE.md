@@ -14,7 +14,7 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
 
 ## Stack (decided — ask before changing)
 
-- Server: Node 20+, TypeScript, Fastify, SQLite via better-sqlite3, `web-push` for notifications
+- Server: Node 22+ (better-sqlite3 13 needs it), TypeScript, Fastify, SQLite via better-sqlite3, `web-push` for notifications
 - Client: Vite + React + TypeScript, installable PWA, served by the same server; charts in SVG
 - Live updates: server-sent events (SSE) from server to client; REST for commands
 - Tests: Vitest; a device simulator stands in for the iKamand everywhere except `scripts/`
@@ -44,7 +44,9 @@ reading, runs cooks, sends alerts, and serves a PWA that Phil uses on his iPhone
 
 - `npm install` — install all workspaces (`shared/`, `server/`, `client/`)
 - `npm run dev` — server (`tsx watch`, port `EMBER_PORT`, default 8080) + Vite on 5173, which
-  proxies `/api` and `/healthz` to the server
+  proxies `/api` and `/healthz` to the server. With `USE_SIMULATOR=true` the server runs the
+  simulator in-process (`SIM_SCENARIO`, `SIM_SPEED`) and uses `DATA_DIR/ember-sim.db`; otherwise it
+  talks to `IKAMAND_HOST` and uses `DATA_DIR/ember.db`
 - `npm test` / `npm run test:watch` — Vitest across `shared/`, `server/`, `scripts/`
 - `npm run lint` (Biome; `npm run format` to fix) and `npm run typecheck`
 - `npm run build` — builds `client/dist`, which the server serves in production

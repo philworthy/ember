@@ -49,6 +49,7 @@ export function harness(
   const link = new DeviceLink(client, { ...opts.link, clock, restore: opts.restore });
   const events: Logged[] = [];
   const types: (keyof DeviceEvents)[] = [
+    "intent",
     "reading",
     "link",
     "recovery",
