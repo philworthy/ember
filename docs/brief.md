@@ -215,7 +215,9 @@ Decided in M6 (`server/src/push/`):
 - **iOS:** push exists only in the installed app, and permission is asked from the "Turn on
   alerts" tap. The service worker shows a notification for every push (iOS drops the
   subscriptions of apps that push silently). The app re-sends its subscription to the server
-  every time it opens, so a fresh database (or the simulator's) gets it without a tap.
+  whenever it opens, comes back to the foreground or opens Settings, so a fresh database (or the
+  simulator's) gets it without a tap. While Ember is in the foreground, iOS puts its alerts in
+  Notification Center without a banner; the in-app state (e.g. the Looks done prompt) covers that.
 
 ### Estimates
 

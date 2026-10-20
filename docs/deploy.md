@@ -167,5 +167,6 @@ first and copy the whole `data` folder, including the `ember.db-wal` file if the
 | "Add to Home Screen" makes a plain bookmark | The page wasn't loaded over HTTPS, or wasn't fully loaded yet. Reload, then try again. |
 | Settings says to add Ember to the Home Screen | It's open in Safari, not the installed app. Open it from the home screen icon. |
 | Send a test fails | The error comes from Apple's push service or the network. Check the `ember` log for `push:` lines. To test the NAS's way out: Container Manager › Container › ember › Terminal › Create › `sh`, then `node -e "fetch('https://web.push.apple.com').then(r => console.log(r.status), e => console.log(e.message))"` (any status code means it got through). |
-| Test says sent, but nothing arrives | iPhone Settings › Notifications › Ember: allow notifications, and check Focus isn't hiding them. |
+| No banner while Ember is open | Normal on iOS: an alert for the app in front of you goes straight to Notification Center, with no banner (seen 2026-10-20). The app's own screen shows the same thing. |
+| Test says sent, but nothing arrives | Check Notification Center first (see above). Then iPhone Settings › Notifications › Ember: allow notifications, and check Focus isn't hiding them. |
 | Settings shows "Turn on alerts" again | The phone's subscription expired or was removed (Apple said it's gone), or `vapid.json` changed. Turn alerts on again. |
