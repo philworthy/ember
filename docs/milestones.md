@@ -13,7 +13,7 @@ One milestone per working session or so. Start each in plan mode, and commit whe
 | M3 Storage, sessions, API | 2026-10-19 | `eae10b2` | tests, 60× brisket run |
 | M4 Live UI | 2026-10-19 | `6b6dc3d` | Phil, simulated cook on Mac and phone |
 | M5 Deploy to the NAS | 2026-10-19 | `5b494ae` | Phil, iPhone over Tailscale with the real grill |
-| M6 Alerts | 2026-10-20 | `80c7b7f`, `718eee6` | Phil, installed iPhone PWA: simulated alerts cook on the NAS, plus a test push and Looks done from the real grill |
+| M6 Alerts | 2026-10-20 | `80c7b7f`, `718eee6` | Phil, installed iPhone PWA: five alert types in the simulated cook on the NAS, Looks done from the real grill; auto-ended "Cook ended" only in tests so far |
 
 Next: M7.
 
