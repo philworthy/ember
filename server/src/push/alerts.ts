@@ -174,7 +174,7 @@ export class AlertService {
           type: "looksDone",
           title: "Cook ended",
           body: `${name} ended automatically${after}.`,
-          url: HISTORY,
+          url: `${HISTORY}/${e.sessionId}`,
           tag: `done-${e.sessionId}`,
         });
         return;

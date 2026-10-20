@@ -4,9 +4,10 @@ import { store, useLive, useServerNow } from "./live.ts";
 import { useRoute } from "./router.ts";
 import { FireUp } from "./screens/FireUp.tsx";
 import { FoodPicker } from "./screens/FoodPicker.tsx";
+import { History } from "./screens/History.tsx";
 import { Idle } from "./screens/Idle.tsx";
 import { LiveCook } from "./screens/LiveCook.tsx";
-import { History } from "./screens/Minimal.tsx";
+import { PastCook } from "./screens/PastCook.tsx";
 import { Settings } from "./screens/Settings.tsx";
 import { Targets } from "./screens/Targets.tsx";
 import { SheetHeader } from "./ui/parts.tsx";
@@ -36,7 +37,7 @@ export function App() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs on route change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [route.name]);
+  }, [route.name, route.name === "cook" && route.id]);
 
   return (
     <>
@@ -48,6 +49,7 @@ export function App() {
   // Called, not rendered as a component: a component defined here would remount on every frame.
   function screen() {
     if (route.name === "history") return <History />;
+    if (route.name === "cook") return <PastCook id={route.id} snap={snap} />;
     if (route.name === "settings") return <Settings snap={snap} now={now} />;
     if (!snap.live) {
       return (

@@ -117,6 +117,58 @@ export interface CookEvent {
   data: Record<string, unknown>;
 }
 
+// ---- History ----
+
+/** A stretch of time, Unix ms. */
+export interface Span {
+  from: number;
+  to: number;
+}
+
+/** One averaged point of a History card's small graph. */
+export type SparkPoint = Pick<Reading, "ts" | "pitC" | "t1C" | "t2C" | "t3C">;
+
+/** `GET /api/sessions`: a cook in the History list. */
+export interface HistoryEntry extends Session {
+  /** The pit target held longest, or null when none was set. */
+  pitTargetC: number | null;
+  /** The foods that were on probes inside the cook's window. */
+  foods: { slot: ProbeSlot; food: Food | null; weightLb: number | null }[];
+  /** Empty while the cook is open. */
+  spark: SparkPoint[];
+}
+
+/** An item as History shows it: `inWindow` is false when a trim left it outside the cook. */
+export type HistoryItem = Item & { inWindow: boolean };
+
+/** `GET /api/sessions/:id`, and the answer to `PATCH`. */
+export interface CookDetail {
+  session: Session;
+  items: HistoryItem[];
+  targets: TargetChange[];
+  fireUps: FireUp[];
+  events: CookEvent[];
+  /** What the cook engine recorded, before any trim. */
+  recorded: { startedAt: number; endedAt: number | null };
+  /** The readings around the cook that Adjust start & end can cover. */
+  bounds: Span;
+  pitTargetC: number | null;
+  pit: {
+    /** Average pit once it first reached the target. */
+    avgC: number | null;
+    /** How far the pit strayed from the target (95th percentile, °C), once it was holding. */
+    heldWithinC: number | null;
+  };
+}
+
+/** `PATCH /api/sessions/:id`. A null title goes back to the generated one. */
+export interface CookEdit {
+  startedAt?: number;
+  endedAt?: number;
+  notes?: string;
+  title?: string | null;
+}
+
 export type Estimate = { kind: "eta"; atMs: number } | { kind: "stalled" } | null;
 
 export interface LiveProbe {

@@ -16,6 +16,7 @@ import type {
   RecentFood,
   Session,
   SessionOrigin,
+  SparkPoint,
   TargetChange,
   TargetSource,
   TargetSubject,
@@ -136,6 +137,21 @@ function toPushSub(r: Row): PushSubscriptionRow {
 
 const SLOT_COLUMN = { 1: "t1_c", 2: "t2_c", 3: "t3_c" } as const;
 
+/** A session's window as the cook engine recorded it (kept once History trims it). */
+export interface RecordedSession {
+  startedAt: number;
+  endedAt: number;
+}
+
+/** An item as the cook engine recorded it (kept once History trims its session). */
+export interface RecordedItem {
+  startedAt: number;
+  endedAt: number;
+  endReason: ItemEndReason;
+  cameOffC: number | null;
+  reachedTargetAt: number | null;
+}
+
 export class Store {
   private readonly q;
 
@@ -148,12 +164,24 @@ export class Store {
       ),
       lastReadingTs: p("SELECT max(ts) AS ts FROM readings"),
       readings: p("SELECT * FROM readings WHERE ts >= ? AND ts <= ? ORDER BY ts"),
+      readingSpan: p(
+        "SELECT min(ts) AS first, max(ts) AS last FROM readings WHERE ts >= ? AND ts <= ?",
+      ),
+      readingsBucketed: p(
+        `SELECT CAST((ts - @from) / @bucketMs AS INTEGER) AS k, avg(pit_c) AS pit, avg(t1_c) AS t1, avg(t2_c) AS t2,
+           avg(t3_c) AS t3
+         FROM readings WHERE ts >= @from AND ts <= @to GROUP BY k ORDER BY k`,
+      ),
       getSetting: p("SELECT value FROM settings WHERE key = ?"),
       setSetting: p(
         "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
       ),
       openSession: p("SELECT * FROM sessions WHERE ended_at IS NULL"),
       session: p("SELECT * FROM sessions WHERE id = ?"),
+      prevSession: p("SELECT * FROM sessions WHERE id < ? ORDER BY id DESC LIMIT 1"),
+      nextSession: p("SELECT * FROM sessions WHERE id > ? ORDER BY id LIMIT 1"),
+      sessionRecorded: p("SELECT recorded FROM sessions WHERE id = ?"),
+      setSessionRecorded: p("UPDATE sessions SET recorded = ? WHERE id = ?"),
       sessions: p("SELECT * FROM sessions WHERE started_at < ? ORDER BY started_at DESC LIMIT ?"),
       insertSession: p(
         "INSERT INTO sessions (started_at, origin, title) VALUES (?, ?, ?) RETURNING *",
@@ -161,6 +189,7 @@ export class Store {
       item: p("SELECT * FROM items WHERE id = ?"),
       activeItems: p("SELECT * FROM items WHERE ended_at IS NULL ORDER BY slot"),
       sessionItems: p("SELECT * FROM items WHERE session_id = ? ORDER BY started_at, id"),
+      setItemRecorded: p("UPDATE items SET recorded = ? WHERE id = ?"),
       lastItem: p(
         "SELECT * FROM items WHERE session_id = ? AND slot = ? ORDER BY started_at DESC, id DESC LIMIT 1",
       ),
@@ -222,6 +251,27 @@ export class Store {
     return (this.q.readings.all(from, to) as Row[]).map(toReading);
   }
 
+  /** First and last reading times in a window (nulls when there are none). */
+  readingSpan(from: number, to: number): { first: number | null; last: number | null } {
+    const row = this.q.readingSpan.get(from, to) as Row;
+    return { first: num(row.first), last: num(row.last) };
+  }
+
+  /**
+   * Readings averaged into `bucketMs` buckets (for small graphs). A bucket where a probe only read
+   * null stays null; a bucket with no readings at all is left out.
+   */
+  readingsBucketed(from: number, to: number, bucketMs: number): SparkPoint[] {
+    const rows = this.q.readingsBucketed.all({ from, to, bucketMs }) as Row[];
+    return rows.map((r) => ({
+      ts: from + Number(r.k) * bucketMs + Math.floor(bucketMs / 2),
+      pitC: num(r.pit),
+      t1C: num(r.t1),
+      t2C: num(r.t2),
+      t3C: num(r.t3),
+    }));
+  }
+
   /** Highest temperature a probe read in a window (for an item's "passed 140 °F"). */
   maxProbeC(slot: ProbeSlot, from: number, to: number): number | null {
     const col = SLOT_COLUMN[slot];
@@ -259,6 +309,23 @@ export class Store {
     return (this.q.sessions.all(before, limit) as Row[]).map(toSession);
   }
 
+  /** The sessions just before and after this one (ids follow start order). */
+  neighbours(id: number): { prev: Session | null; next: Session | null } {
+    const prev = this.q.prevSession.get(id) as Row | undefined;
+    const next = this.q.nextSession.get(id) as Row | undefined;
+    return { prev: prev ? toSession(prev) : null, next: next ? toSession(next) : null };
+  }
+
+  /** The window the engine recorded, if History has trimmed this session. */
+  sessionRecorded(id: number): RecordedSession | null {
+    const row = this.q.sessionRecorded.get(id) as Row | undefined;
+    return row?.recorded ? (JSON.parse(String(row.recorded)) as RecordedSession) : null;
+  }
+
+  setSessionRecorded(id: number, r: RecordedSession): void {
+    this.q.setSessionRecorded.run(JSON.stringify(r), id);
+  }
+
   insertSession(startedAt: number, origin: SessionOrigin, title: string): Session {
     return toSession(this.q.insertSession.get(startedAt, origin, title) as Row);
   }
@@ -268,11 +335,19 @@ export class Store {
     patch: Partial<
       Pick<
         Session,
-        "endedAt" | "endedBy" | "title" | "titleCustom" | "notes" | "looksDoneAt" | "keepGoingAt"
+        | "startedAt"
+        | "endedAt"
+        | "endedBy"
+        | "title"
+        | "titleCustom"
+        | "notes"
+        | "looksDoneAt"
+        | "keepGoingAt"
       >
     >,
   ): Session {
     const cols: Record<string, unknown> = {
+      started_at: patch.startedAt,
       ended_at: patch.endedAt,
       ended_by: patch.endedBy,
       title: patch.title,
@@ -298,6 +373,18 @@ export class Store {
 
   sessionItems(sessionId: number): Item[] {
     return (this.q.sessionItems.all(sessionId) as Row[]).map(toItem);
+  }
+
+  /** A session's items, each with what the engine recorded if History has trimmed it. */
+  sessionItemsRecorded(sessionId: number): { item: Item; recorded: RecordedItem | null }[] {
+    return (this.q.sessionItems.all(sessionId) as Row[]).map((r) => ({
+      item: toItem(r),
+      recorded: r.recorded ? (JSON.parse(String(r.recorded)) as RecordedItem) : null,
+    }));
+  }
+
+  setItemRecorded(id: number, r: RecordedItem): void {
+    this.q.setItemRecorded.run(JSON.stringify(r), id);
   }
 
   lastItem(sessionId: number, slot: ProbeSlot): Item | null {
@@ -345,12 +432,20 @@ export class Store {
     patch: Partial<
       Pick<
         Item,
-        "food" | "weightLb" | "targetC" | "endedAt" | "endReason" | "cameOffC" | "reachedTargetAt"
+        | "food"
+        | "weightLb"
+        | "targetC"
+        | "startedAt"
+        | "endedAt"
+        | "endReason"
+        | "cameOffC"
+        | "reachedTargetAt"
       >
     > & { stats?: ItemStats },
   ): Item {
     const s = patch.stats;
     this.update("items", id, {
+      started_at: patch.startedAt,
       food: patch.food === undefined ? undefined : patch.food && JSON.stringify(patch.food),
       weight_lb: patch.weightLb,
       target_c: patch.targetC,

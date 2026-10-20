@@ -11,6 +11,7 @@ export type Route =
   | { name: "food"; slot: ProbeSlot }
   | { name: "fireUp" }
   | { name: "history" }
+  | { name: "cook"; id: number }
   | { name: "settings" };
 
 const slotOf = (s: string | undefined): ProbeSlot | null =>
@@ -29,8 +30,10 @@ export function parseRoute(hash: string): Route {
     }
     case "fire-up":
       return { name: "fireUp" };
-    case "history":
-      return { name: "history" };
+    case "history": {
+      const id = Number(arg);
+      return arg && Number.isInteger(id) && id > 0 ? { name: "cook", id } : { name: "history" };
+    }
     case "settings":
       return { name: "settings" };
     default:
@@ -48,6 +51,8 @@ export function href(route: Route): string {
       return `#/food/${route.slot}`;
     case "fireUp":
       return "#/fire-up";
+    case "cook":
+      return `#/history/${route.id}`;
     default:
       return `#/${route.name}`;
   }

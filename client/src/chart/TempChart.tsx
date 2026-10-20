@@ -2,8 +2,9 @@
 // switch (1h / 3h / 6h / All) and chips that toggle each series (design/canvas/Main.dc.html).
 
 import type { Reading } from "@ember/shared";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { f } from "../format.ts";
+import { ChartPlot, useWidth } from "./ChartPlot.tsx";
 import { buildChart, type ChartInput, type SeriesId } from "./chart.ts";
 
 export interface SeriesDef {
@@ -40,16 +41,7 @@ export function TempChart({
   const [range, setRange] = useState<ChartInput["range"]>("all");
   const [hidden, setHidden] = useState<Set<SeriesId>>(new Set());
   const wrap = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(358);
-
-  useLayoutEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setWidth(Math.round(el.clientWidth)));
-    ro.observe(el);
-    setWidth(Math.round(el.clientWidth));
-    return () => ro.disconnect();
-  }, []);
+  const width = useWidth(wrap);
 
   const span = RANGES.find((r) => r.id === range)?.ms ?? 0;
   // Snap "now" to the newest reading so the line ends at the right edge.
@@ -73,8 +65,6 @@ export function TempChart({
     [version, key, from, to, width, range],
   );
   const color = Object.fromEntries(series.map((s) => [s.id, s.color])) as Record<SeriesId, string>;
-  // Draw probes under the pit, P3 lowest, as the design does.
-  const order = [...chart.series].reverse();
 
   return (
     <section
@@ -126,101 +116,13 @@ export function TempChart({
       </div>
 
       <div ref={wrap} style={{ position: "relative", height: 222 }}>
-        <svg
+        <ChartPlot
+          chart={chart}
           width={width}
           height={HEIGHT}
-          viewBox={`0 0 ${width} ${HEIGHT}`}
-          role="img"
-          aria-label="Pit and probe temperatures over time, with dashed target lines"
-          style={{ display: "block", overflow: "visible" }}
-        >
-          {chart.grid.map((g) => (
-            <g key={g.label}>
-              <line x1={0} x2={width} y1={g.y} y2={g.y} stroke="var(--grid)" strokeWidth={1} />
-              <text
-                x={16}
-                y={g.y - 4}
-                fill="var(--text-3)"
-                style={{ fontFamily: "var(--mono)", fontSize: 10 }}
-              >
-                {g.label}
-              </text>
-            </g>
-          ))}
-          {order.map(
-            (s) =>
-              s.ty !== null && (
-                <line
-                  key={`t-${s.id}`}
-                  x1={0}
-                  x2={width}
-                  y1={s.ty}
-                  y2={s.ty}
-                  stroke={color[s.id]}
-                  strokeWidth={1}
-                  strokeDasharray="3 4"
-                  opacity={0.7}
-                />
-              ),
-          )}
-          {order.map((s) => (
-            <path
-              key={`l-${s.id}`}
-              d={s.d}
-              fill="none"
-              stroke={color[s.id]}
-              strokeWidth={2}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          ))}
-          {order.map(
-            (s) =>
-              s.end && (
-                <circle
-                  key={`e-${s.id}`}
-                  cx={s.end.x}
-                  cy={s.end.y}
-                  r={4}
-                  fill={color[s.id]}
-                  stroke="var(--surface)"
-                  strokeWidth={2}
-                />
-              ),
-          )}
-        </svg>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 206,
-            height: 16,
-            fontFamily: "var(--mono)",
-            fontSize: 10,
-            color: "var(--text-3)",
-          }}
-        >
-          {chart.xTicks.map((t) => (
-            <span
-              key={`${t.label}-${t.x}`}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: t.x,
-                whiteSpace: "nowrap",
-                transform:
-                  t.align === "start"
-                    ? "none"
-                    : t.align === "end"
-                      ? "translateX(-100%)"
-                      : "translateX(-50%)",
-              }}
-            >
-              {t.label}
-            </span>
-          ))}
-        </div>
+          color={color}
+          label="Pit and probe temperatures over time, with dashed target lines"
+        />
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "0 16px" }}>

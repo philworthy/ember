@@ -50,6 +50,16 @@ export const COOK = {
   defaultPitC: fToDeviceC(225),
 };
 
+/** History (docs/brief.md › History editing). */
+export const HISTORY = {
+  /** Adjust start & end can widen a cook by up to this much, over readings that exist. */
+  boundsMarginMs: 3 * 60 * MIN,
+  /** The shortest a trimmed cook can be. */
+  minWindowMs: 15 * MIN,
+  /** Points per series in a History card's small graph. */
+  sparkPoints: 80,
+};
+
 /** Alert defaults (docs/brief.md › Alerts) and the limits Settings may set them to. */
 export const ALERTS = {
   defaults: {

@@ -7,7 +7,6 @@ import { EventEmitter } from "node:events";
 import {
   type CookEvent,
   type CookEventType,
-  cToDisplayF,
   type FireUpOutcome,
   type Food,
   foodName,
@@ -38,6 +37,8 @@ import {
   type TrackOutcome,
   trackReading,
 } from "./detect.ts";
+import { CommandError } from "./errors.ts";
+import { sessionTitle } from "./history.ts";
 
 export const SLOTS: ProbeSlot[] = [1, 2, 3];
 const SLOT_KEY = { 1: "t1C", 2: "t2C", 3: "t3C" } as const;
@@ -56,15 +57,7 @@ export interface LinkRestore {
   sceSentS: number | null;
 }
 
-/** A command the user can't make right now (400 invalid, 404 nothing there, 409 wrong state). */
-export class CommandError extends Error {
-  constructor(
-    readonly status: 400 | 404 | 409,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+export { CommandError };
 
 export interface Accepted {
   /** Follow the device's read-back on SSE as a `commandResult` event; null when nothing is sent. */
@@ -311,6 +304,25 @@ export class CookEngine extends EventEmitter<EngineEvents> {
     }
     this.publish();
     return { id: null, sessionId: this.session?.id ?? null };
+  }
+
+  /**
+   * Cook this again: set up the next Start like a past cook, with its pit target (when it had
+   * one) and all three probes. Only between cooks; it saves settings and sends nothing.
+   */
+  prepare(next: { pitC: number | null; setups: Record<ProbeSlot, ProbeSetup | null> }): Accepted {
+    if (this.session) throw new CommandError(409, "Finish the current cook first");
+    if (next.pitC !== null) this.checkPit(next.pitC);
+    for (const slot of SLOTS) {
+      const setup = next.setups[slot];
+      if (setup) this.checkProbe(setup.targetC);
+    }
+    this.store.transaction(() => {
+      if (next.pitC !== null) this.store.setSetting(SETTING.nextPitC, next.pitC);
+      this.store.setSetting(SETTING.probeSetup, next.setups);
+    });
+    this.publish();
+    return { id: null, sessionId: null };
   }
 
   // ---------------------------------------------------------------- live state
@@ -661,13 +673,8 @@ export class CookEngine extends EventEmitter<EngineEvents> {
   private updateTitle(): void {
     const s = this.session;
     if (!s || s.titleCustom) return;
-    const names = [...new Set(this.store.sessionItems(s.id).map((i) => foodName(i.food, i.slot)))];
-    const pit = this.store.lastPitTarget(s.id)?.targetC;
-    const title = names.length
-      ? names.join(" & ")
-      : pit !== undefined
-        ? `${cToDisplayF(pit)}° cook`
-        : "Cook";
+    const pit = this.store.lastPitTarget(s.id)?.targetC ?? null;
+    const title = sessionTitle(this.store.sessionItems(s.id), pit);
     if (title !== s.title) this.session = this.store.updateSession(s.id, { title });
   }
 

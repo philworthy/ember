@@ -53,6 +53,24 @@ describe("bucket", () => {
   });
 });
 
+describe("gapMs", () => {
+  it("lets coarser readings (History's small graphs) join up", () => {
+    const rs = [];
+    for (let t = 0; t <= 10 * HOUR; t += 7.5 * MIN) rs.push(reading(t, 250));
+    const input = {
+      readings: rs,
+      from: 0,
+      to: 10 * HOUR,
+      width: 326,
+      height: 36,
+      range: "span" as const,
+      series: [{ id: "pit" as const, targetC: null }],
+    };
+    expect(buildChart(input).series[0]?.d.match(/M/g)?.length).toBeGreaterThan(1);
+    expect(buildChart({ ...input, gapMs: 15 * MIN }).series[0]?.d.match(/M/g)).toHaveLength(1);
+  });
+});
+
 describe("yScale", () => {
   it("snaps to 50° gridlines with some headroom", () => {
     expect(yScale([40, 250])).toEqual({ lo: 0, hi: 300, step: 50 });
@@ -74,6 +92,10 @@ describe("xTicks", () => {
   it("drops a tick that would collide with now", () => {
     const labels = xTicks("all", 0, 6 * HOUR + 5 * MIN, 354).map((t) => t.label);
     expect(labels).toEqual(["0h", "2h", "4h", "now"]);
+  });
+  it("ends a past cook at its length", () => {
+    const labels = xTicks("span", 0, 12 * HOUR + 40 * MIN, 354).map((t) => t.label);
+    expect(labels).toEqual(["0h", "4h", "8h", "12h 40m"]);
   });
   it("counts back from now for a range", () => {
     const labels = xTicks("1h", 0, HOUR, 354).map((t) => t.label);

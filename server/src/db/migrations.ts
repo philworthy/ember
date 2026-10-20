@@ -105,4 +105,10 @@ export const MIGRATIONS: string[] = [
   ALTER TABLE push_subscriptions ADD COLUMN last_ok_at INTEGER;
   ALTER TABLE push_subscriptions ADD COLUMN last_error TEXT;
   `,
+  // 3: M7 — History trims. started_at/ended_at hold the trimmed window; `recorded` keeps what the
+  // cook engine recorded (JSON), set on the first trim, so a trim can always be undone.
+  `
+  ALTER TABLE sessions ADD COLUMN recorded TEXT;  -- {startedAt, endedAt}
+  ALTER TABLE items ADD COLUMN recorded TEXT;     -- {startedAt, endedAt, endReason, cameOffC, reachedTargetAt}
+  `,
 ];

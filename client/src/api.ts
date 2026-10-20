@@ -4,13 +4,16 @@
 import type {
   AlertPrefs,
   CatalogNode,
+  CookDetail,
+  CookEdit,
   DeviceInfo,
   Food,
+  HistoryEntry,
   ProbeSlot,
   PushInfo,
   PushResult,
+  Reading,
   RecentFood,
-  Session,
 } from "@ember/shared";
 import { toast } from "./ui/toast.tsx";
 
@@ -50,6 +53,9 @@ async function command(
 
 type Opts = { quiet?: boolean };
 
+/** Cooks per page of History. */
+export const HISTORY_PAGE = 50;
+
 export const api = {
   start: (pitC: number, o?: Opts) => command("POST", "/api/cook/start", { pitC }, o),
   setPit: (pitC: number, o?: Opts) => command("POST", "/api/cook/target", { pitC }, o),
@@ -69,7 +75,17 @@ export const api = {
 
   catalog: () => request<CatalogNode[]>("GET", "/api/catalog"),
   recentFoods: () => request<RecentFood[]>("GET", "/api/foods/recent"),
-  sessions: () => request<Session[]>("GET", "/api/sessions?limit=50"),
+  history: (before?: number) =>
+    request<HistoryEntry[]>(
+      "GET",
+      `/api/sessions?limit=${HISTORY_PAGE}${before === undefined ? "" : `&before=${before}`}`,
+    ),
+  readings: (from: number, to: number) =>
+    request<Reading[]>("GET", `/api/readings?from=${Math.floor(from)}&to=${Math.ceil(to)}`),
+  cook: (id: number) => request<CookDetail>("GET", `/api/sessions/${id}`),
+  editCook: (id: number, patch: CookEdit) =>
+    request<CookDetail>("PATCH", `/api/sessions/${id}`, patch),
+  cookAgain: (id: number) => command("POST", `/api/sessions/${id}/cook-again`),
 
   push: () => request<PushInfo>("GET", "/api/push"),
   subscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>

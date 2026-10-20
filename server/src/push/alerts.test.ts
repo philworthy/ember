@@ -85,7 +85,7 @@ describe("alerts scenario", () => {
       body: "Ember ends the cook in 1h 00m unless you keep going.",
       url: "/#/",
     });
-    expect(ended).toMatchObject({ title: "Cook ended", url: "/#/history", tag: done?.tag });
+    expect(ended).toMatchObject({ title: "Cook ended", url: "/#/history/1", tag: done?.tag });
     expect(ended?.body).toMatch(/^Chicken ended automatically after (\d+h )?\d+m\.$/);
     expect(sent.slice(0, -1).every((p) => p.url === "/#/")).toBe(true);
     expect(new Set(sent.map((p) => p.tag)).size).toBe(6);

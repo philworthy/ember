@@ -1,6 +1,6 @@
 // Display formatting. Temperatures arrive in °C and show in °F, through shared/src/units.ts only.
 
-import { cToDisplayF, pitTargetF } from "@ember/shared";
+import { cDeltaToF, cToDisplayF, pitTargetF } from "@ember/shared";
 
 /** °C → "250" (whole °F), or "—" when there's no reading. */
 export function f(c: number | null | undefined): string {
@@ -15,6 +15,28 @@ export function pitDeg(c: number | null | undefined): string {
 /** °C → "250°". */
 export function deg(c: number | null | undefined): string {
   return c === null || c === undefined ? "—" : `${cToDisplayF(c)}°`;
+}
+
+/** A °C difference → "±6°". */
+export function degDelta(c: number | null | undefined): string {
+  return c === null || c === undefined ? "—" : `±${Math.round(cDeltaToF(c))}°`;
+}
+
+const DAY = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+const CLOCK = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+
+/** "Sun, Oct 11". */
+export function day(ts: number): string {
+  return DAY.format(ts);
+}
+
+/** "7:00 AM". */
+export function clock(ts: number): string {
+  return CLOCK.format(ts);
 }
 
 const MIN = 60_000;

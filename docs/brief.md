@@ -50,7 +50,8 @@ iPhone PWA ──HTTPS (Tailscale)──▶ ember server (Docker on NAS) ──H
   server uses them. The client converts with `shared/src/units.ts`.
 - Implemented in `server/src/db/` (schema in `migrations.ts`). The server also keeps target changes,
   Fire it up runs, settings (including the device link's intent, so a restart resumes the cook),
-  push subscriptions and an event log.
+  push subscriptions and an event log. A session's and its items' `started_at`/`ended_at` are the
+  window History shows; once it's trimmed, `recorded` keeps the engine's original (M7).
 - **Food catalog:** a tree of category › cut › sub-cut with a default "pull at" temperature. Seed
   it from `docs/food-catalog.json` and keep it editable (a JSON file in `/data` is fine).
   Custom names are stored on the item and also remembered for the Recent list.
@@ -111,7 +112,7 @@ Screen rules the designs leave open (decided in M4):
   that probe's target. "Take it off this probe" (in a session) or "Clear" (before Start) removes
   the food. The food picker's weight starts at the last weight used for that food, else empty;
   + starts at 1.0 lb and −/+ repeat while held. A custom food pulls at 200° (fine-tuned on Targets).
-- History stays plain until M7: a list of past cooks. Settings (M6) has the grill's status,
+- Settings (M6) has the grill's status,
   alerts on this device (Turn on alerts, Send a test, Turn off), the alert toggles and thresholds,
   and install help.
 
@@ -172,7 +173,14 @@ arrives on SSE as a `commandResult` event, so nothing waits on an offline device
 - `PUT /api/probes/:slot {food: {path} | {custom} | null, weightLb?, targetC?}`: during a session,
   edits the active item or starts a new one (Reuse probe); otherwise sets it up for the next Start.
   `POST /api/probes/:slot/target {targetC}`, `DELETE /api/probes/:slot`.
-- `GET /api/catalog`, `/api/sessions`, `/api/sessions/:id`, `/api/readings?from&to`.
+- `GET /api/catalog`, `/api/readings?from&to`.
+- `GET /api/sessions?limit&before`: History's cooks, newest first, each with its held pit target,
+  foods and ~80 averaged points for the small graph. `GET /api/sessions/:id`: one cook with its
+  items, targets, Fire it up runs, events, what was recorded before any trim, the trim `bounds`
+  and the pit's stats. `PATCH /api/sessions/:id {startedAt?, endedAt?, notes?, title?}` edits a
+  past cook (409 for the open one) and answers with the same detail; a null title goes back to
+  the generated one. `POST /api/sessions/:id/cook-again` sets up the next Start like it (409
+  while a cook is open).
 - `GET /api/foods/recent`: the last 6 distinct foods put on probes, newest first, with the latest
   weight given for each (the food picker's Recent list).
 - `LiveState.now` is the server's clock and `clockRate` how fast it runs (1, or `SIM_SPEED` with
@@ -207,7 +215,7 @@ Decided in M6 (`server/src/push/`):
   with the band in °C like everything else.
 - **Payload:** `{type, title, body, url, tag}`, a few hundred bytes. Times are relative ("in
   1h 00m"), so the sped-up simulator reads right. Taps open Live cook (`/#/`), except
-  auto-ended, which opens History. The tag is per item, session or Fire it up run, so a repeat
+  auto-ended, which opens that cook in History (`/#/history/<id>`). The tag is per item, session or Fire it up run, so a repeat
   replaces the older notification instead of stacking.
 - **Keys:** the VAPID keys are generated on the server's first start into
   `DATA_DIR/vapid.json` (or come from `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`). They must never
@@ -233,6 +241,26 @@ Decided in M6 (`server/src/push/`):
 
 - Trimming a session's start or end only moves the window. Readings are never deleted. Item stats
   are recalculated after a trim.
+
+Decided in M7 (`server/src/cook/history.ts`):
+
+- **Trims.** The first trim keeps what the engine recorded (`recorded` on the session and its
+  items), and every trim works from that, so widening back gives the original exactly. An item
+  that started with the cook moves with its start, and one that ended with it (`session_end`)
+  moves with its end; anything else keeps its own times, clipped to the window. An item left with
+  no time inside shows as "Outside this cook". Reaching the target, the stall, the average pit and
+  the temperature it came off at are recalculated from the readings. The generated title only
+  counts the foods inside.
+- **Bounds.** Adjust start & end reaches up to 3 h either side of the recorded cook, over readings
+  that exist and not into the cooks before and after it, in 5-minute steps; a cook is at least
+  30 min in the app (15 min on the server).
+- **Pit.** The pit target shown for a cook is the one held longest (a reverse sear's last minutes
+  don't win). The Pit card's average and "Held within ±N°" (95th percentile of the distance from
+  the target) count from when the pit first reached each target's holding band while the cook was
+  running, so the heat-up and a cool-down after Stop don't count.
+- **Cook this again** sets the held pit target and, on each probe, the food, weight and target
+  of the item that was on it longest, then goes to Idle to start (not to Targets, whose button
+  returns to History).
 
 ## Non-goals
 

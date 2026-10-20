@@ -1,7 +1,11 @@
-// The live graph's maths, kept pure so it can be tested: bucket readings into pixel columns, scale
-// to °F, and lay out gridlines and time ticks the way design/canvas/Main.dc.html does.
+// The graphs' maths, kept pure so it can be tested: bucket readings into pixel columns, scale
+// to °F, and lay out gridlines and time ticks the way design/canvas/Main.dc.html and
+// HistoryDetail.dc.html do. Live cook, Past cook and History's small graphs all use it.
 
-import { cToF, type Reading } from "@ember/shared";
+import { cToF, duration, type Reading } from "@ember/shared";
+
+/** What a graph needs from a reading (History's small graphs send only these). */
+export type ChartReading = Pick<Reading, "ts" | "pitC" | "t1C" | "t2C" | "t3C">;
 
 export type SeriesId = "pit" | "p1" | "p2" | "p3";
 
@@ -19,14 +23,19 @@ export interface SeriesInput {
 }
 
 export interface ChartInput {
-  readings: Reading[];
+  readings: ChartReading[];
   from: number;
   to: number;
   width: number;
   height: number;
   series: SeriesInput[];
-  /** "all" labels hours since `from`; otherwise ticks count back from `to`. */
-  range: "1h" | "3h" | "6h" | "all";
+  /**
+   * "all" labels hours since `from`, ending at "now"; "span" does the same for a past cook,
+   * ending at its length. Otherwise ticks count back from `to`.
+   */
+  range: "1h" | "3h" | "6h" | "all" | "span";
+  /** Readings further apart than this break the line (default 30 s: the device was offline). */
+  gapMs?: number;
 }
 
 export interface ChartSeries {
@@ -39,12 +48,13 @@ export interface ChartSeries {
 }
 
 export interface ChartOut {
+  /** Width of the plot, left of the end-dot padding: x = (ts - from) / (to - from) * plotW. */
+  plotW: number;
   grid: { y: number; label: string }[];
   series: ChartSeries[];
   xTicks: { x: number; label: string; align: "start" | "middle" | "end" }[];
 }
 
-/** Readings further apart than this break the line (the device was offline). */
 const GAP_MS = 30_000;
 /** Room on the right for the end dots. */
 const PAD_RIGHT = 4;
@@ -57,11 +67,12 @@ const PAD_RIGHT = 4;
  * before column i.
  */
 export function bucket(
-  readings: Reading[],
+  readings: ChartReading[],
   key: (typeof SERIES_KEY)[SeriesId],
   from: number,
   to: number,
   columns: number,
+  gapMs = GAP_MS,
 ): { values: (number | null | undefined)[]; breaks: boolean[] } {
   const values: (number | null | undefined)[] = new Array(columns).fill(undefined);
   const seen: boolean[] = new Array(columns).fill(false);
@@ -73,7 +84,7 @@ export function bucket(
   for (const r of readings) {
     if (r.ts < from || r.ts > to) continue;
     const col = Math.min(columns - 1, Math.floor(((r.ts - from) / span) * columns));
-    if (prev && r.ts - prev.ts > GAP_MS && col > prev.col) breaks[col] = true;
+    if (prev && r.ts - prev.ts > gapMs && col > prev.col) breaks[col] = true;
     prev = { ts: r.ts, col };
     seen[col] = true;
     const v = r[key];
@@ -128,15 +139,16 @@ export function xTicks(
   const span = Math.max(1, to - from);
   const x = (t: number) => ((t - from) / span) * plotW;
   const ticks: ChartOut["xTicks"] = [];
-  if (range === "all") {
+  if (range === "all" || range === "span") {
+    const end = range === "all" ? "now" : duration(span);
     const steps = [15, 30, 60, 120, 180, 240, 360, 720, 1440].map((m) => m * MIN);
     const every = steps.find((s) => span / s <= 4) ?? 1440 * MIN;
     for (let t = 0; from + t < to; t += every) {
-      // Keep clear of the "now" label.
-      if (t > 0 && x(from + t) > plotW - 32) break;
+      // Keep clear of the end label.
+      if (t > 0 && x(from + t) > plotW - 12 - 6 * end.length) break;
       ticks.push({ x: x(from + t), label: sinceLabel(t), align: t === 0 ? "start" : "middle" });
     }
-    ticks.push({ x: plotW, label: "now", align: "end" });
+    ticks.push({ x: plotW, label: end, align: "end" });
     return ticks;
   }
   const every = range === "1h" ? 15 * MIN : range === "6h" ? 2 * HOUR : HOUR;
@@ -155,7 +167,9 @@ export function buildChart(input: ChartInput): ChartOut {
   const { readings, from, to, width, height, series } = input;
   const plotW = Math.max(10, width - PAD_RIGHT);
   const columns = Math.max(10, Math.round(plotW / 1.5));
-  const buckets = series.map((s) => bucket(readings, SERIES_KEY[s.id], from, to, columns));
+  const buckets = series.map((s) =>
+    bucket(readings, SERIES_KEY[s.id], from, to, columns, input.gapMs),
+  );
 
   const valuesF: number[] = [];
   for (const b of buckets) {
@@ -193,5 +207,5 @@ export function buildChart(input: ChartInput): ChartOut {
   const grid: ChartOut["grid"] = [];
   for (let f = lo + step; f < hi; f += step) grid.push({ y: y(f), label: String(f) });
 
-  return { grid, series: out, xTicks: xTicks(input.range, from, to, plotW) };
+  return { plotW, grid, series: out, xTicks: xTicks(input.range, from, to, plotW) };
 }

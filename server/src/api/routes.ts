@@ -2,10 +2,11 @@
 // id; the device's read-back arrives on the SSE stream as a `commandResult` event, so a command
 // never waits on an offline device.
 
-import type { Food, ProbeSlot } from "@ember/shared";
+import type { CookEdit, Food, ProbeSlot } from "@ember/shared";
 import type { FastifyInstance } from "fastify";
 import type { Catalog } from "../cook/catalog.ts";
 import type { CookEngine } from "../cook/engine.ts";
+import { History } from "../cook/history.ts";
 import type { Store } from "../db/store.ts";
 import type { Clock } from "../device/clock.ts";
 
@@ -38,6 +39,12 @@ const foodSchema = {
   ],
 } as const;
 
+const idParams = {
+  type: "object",
+  required: ["id"],
+  properties: { id: { type: "integer" } },
+} as const;
+
 const body = (required: string[], properties: Record<string, unknown>) => ({
   body: { type: "object", required, additionalProperties: false, properties },
 });
@@ -47,6 +54,7 @@ export function registerRoutes(
   deps: { engine: CookEngine; store: Store; catalog: Catalog; clock: Clock },
 ): void {
   const { engine, store, catalog, clock } = deps;
+  const history = new History(store, clock);
 
   app.get("/api/state", async () => engine.live());
 
@@ -116,28 +124,40 @@ export function registerRoutes(
         },
       },
     },
-    async (req) => store.sessions(req.query.limit ?? 50, req.query.before),
+    async (req) => history.list(req.query.limit ?? 50, req.query.before),
   );
 
   app.get<{ Params: { id: number } }>(
     "/api/sessions/:id",
+    { schema: { params: idParams } },
+    async (req, reply) => {
+      const detail = history.detail(req.params.id);
+      return detail ?? reply.code(404).send({ error: "No such cook" });
+    },
+  );
+
+  // ---- History edits ----
+
+  app.patch<{ Params: { id: number }; Body: CookEdit }>(
+    "/api/sessions/:id",
     {
       schema: {
-        params: { type: "object", required: ["id"], properties: { id: { type: "integer" } } },
+        params: idParams,
+        ...body([], {
+          startedAt: { type: "integer" },
+          endedAt: { type: "integer" },
+          notes: { type: "string", maxLength: 4000 },
+          title: { type: ["string", "null"], maxLength: 80 },
+        }),
       },
     },
-    async (req, reply) => {
-      const session = store.session(req.params.id);
-      if (!session) return reply.code(404).send({ error: "No such session" });
-      const id = session.id;
-      return {
-        session,
-        items: store.sessionItems(id),
-        targets: store.targets(id),
-        fireUps: store.sessionFireUps(id),
-        events: store.sessionEvents(id),
-      };
-    },
+    async (req) => history.edit(req.params.id, req.body),
+  );
+
+  app.post<{ Params: { id: number } }>(
+    "/api/sessions/:id/cook-again",
+    { schema: { params: idParams } },
+    async (req, reply) => reply.code(202).send(engine.prepare(history.cookAgain(req.params.id))),
   );
 
   app.get<{ Querystring: { from?: number; to?: number } }>(
