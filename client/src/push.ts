@@ -1,7 +1,8 @@
 // Web push on this device (docs/brief.md › Alerts). iOS only offers push to the app installed on
 // the home screen, and only asks for permission from a tap, so `enable` must run straight from
-// the button's click. The app re-sends its subscription every time it opens (`syncPush`), so a
-// server that lost it (a new database, the simulator's) has it again without a tap.
+// the button's click. The app re-sends its subscription whenever it opens or comes back to the
+// foreground (`syncPush`), so a server that lost it (a new database, the simulator's) has it
+// again without a tap.
 
 import { api } from "./api.ts";
 
@@ -137,14 +138,18 @@ export async function testPush(): Promise<string | null> {
   return r.data.ok ? null : (r.data.error ?? "The push service refused it");
 }
 
-/** On launch: hand the server this device's subscription again (or renew it for a new key). */
-export async function syncPush(): Promise<void> {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+/**
+ * Hand the server this device's subscription again (or renew it for a new key). Runs on launch,
+ * whenever the app comes back to the foreground (an installed iOS app usually resumes without
+ * reloading), and when Settings opens. Returns an error, or null.
+ */
+export async function syncPush(): Promise<string | null> {
+  if (!("Notification" in window) || Notification.permission !== "granted") return null;
   const reg = await registration();
   let sub = (await reg?.pushManager?.getSubscription()) ?? null;
-  if (!reg || !sub) return;
+  if (!reg || !sub) return null;
   const info = await api.push();
-  if (!info.ok) return;
+  if (!info.ok) return info.error;
   if (!sameKey(sub, info.data.publicKey)) {
     // The server's keys changed: the old subscription can't be used. Renewing may need a tap on
     // some browsers; then Settings shows "Turn on alerts" again.
@@ -152,7 +157,18 @@ export async function syncPush(): Promise<void> {
     sub = await reg.pushManager
       .subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(info.data.publicKey) })
       .catch(() => null);
-    if (!sub) return;
+    if (!sub) return null;
   }
-  await save(sub);
+  return save(sub);
+}
+
+let lastSync = 0;
+
+/** Re-sync when the app comes back to the foreground, at most once a minute. */
+export function syncPushOnResume(): void {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || Date.now() - lastSync < 60_000) return;
+    lastSync = Date.now();
+    void syncPush().catch(() => null);
+  });
 }

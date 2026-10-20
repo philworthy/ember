@@ -19,6 +19,7 @@ import {
   isStandalone,
   type PushState,
   readPush,
+  syncPush,
   testPush,
 } from "../push.ts";
 import { SheetHeader, StepButton, Toggle } from "../ui/parts.tsx";
@@ -62,7 +63,12 @@ export function Settings({ snap, now }: { snap: Snapshot; now: number }) {
       setPublicKey(r.data.publicKey);
       setPrefs(r.data.prefs);
     });
-    void refreshPush();
+    // Make sure the server has this device's subscription before saying alerts are on.
+    void syncPush()
+      .then(
+        (error) => error && setNote({ text: `Couldn't register this device: ${error}`, ok: false }),
+      )
+      .finally(() => refreshPush());
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };

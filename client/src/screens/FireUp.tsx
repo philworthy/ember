@@ -4,7 +4,7 @@
 import { cDeltaToF, type LiveState } from "@ember/shared";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.ts";
-import { countdown, deg } from "../format.ts";
+import { countdown, deg, pitDeg } from "../format.ts";
 import { type Snapshot, store } from "../live.ts";
 import { goHome } from "../router.ts";
 import { FlameIcon } from "../ui/icons.tsx";
@@ -120,7 +120,7 @@ function Choose({ live }: { live: LiveState }) {
         }}
       >
         <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 15 }}>Then hold pit at {deg(target)}</span>
+          <span style={{ fontSize: 15 }}>Then hold pit at {pitDeg(target)}</span>
           <span style={{ fontSize: 13, color: "var(--text-2)" }}>
             {hold
               ? cooking
@@ -277,7 +277,7 @@ function Running({ live, now }: { live: LiveState; now: number }) {
 
       <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)", textAlign: "center" }}>
         {f.thenHoldC !== null
-          ? `Then holding pit at ${deg(f.thenHoldC)}`
+          ? `Then holding pit at ${pitDeg(f.thenHoldC)}`
           : "Then the fan turns off"}
       </p>
 

@@ -13,7 +13,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { api } from "../api.ts";
 import type { SeriesDef } from "../chart/TempChart.tsx";
 import { TempChart } from "../chart/TempChart.tsx";
-import { deg, duration, f } from "../format.ts";
+import { deg, duration, f, pitDeg } from "../format.ts";
 import { type Snapshot, useHistory } from "../live.ts";
 import { navigate } from "../router.ts";
 import {
@@ -129,7 +129,7 @@ function SessionNotices({ live, now }: { live: LiveState; now: number }) {
     notices.push(
       <InfoNotice
         key="found"
-        text={`Ember found the grill already cooking at ${deg(target)} and is tracking it as this cook.`}
+        text={`Ember found the grill already cooking at ${pitDeg(target)} and is tracking it as this cook.`}
         onDismiss={() => dismiss("found", session.id)}
       />,
     );
@@ -305,7 +305,7 @@ function PitCard({ live }: { live: LiveState }) {
             <PencilIcon size={12} />
           </span>
           <span style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>
-            {deg(live.cook.pitTargetC)}
+            {pitDeg(live.cook.pitTargetC)}
           </span>
         </button>
       </div>
@@ -608,7 +608,7 @@ function CookButtons({ live, onEnd }: { live: LiveState; onEnd: () => void }) {
           className="btn btn-primary"
           onClick={() => void api.start(live.cook.pitTargetC)}
         >
-          Resume at {deg(live.cook.pitTargetC)}
+          Resume at {pitDeg(live.cook.pitTargetC)}
         </button>
       </div>
       {end}

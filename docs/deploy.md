@@ -111,19 +111,31 @@ doesn't watch or control the grill (any cook carries on to the grill's own end t
 
 1. Container Manager › Project › ember › **Stop**, then edit the YAML and uncomment the three lines
    under "Testing alerts with the simulator" (`USE_SIMULATOR`, `SIM_SCENARIO: alerts`,
-   `SIM_SPEED: "20"`). Save and start it. The `ember` log shows `device: simulator (alerts, 20×)`.
-   Simulated cooks go to `data/ember-sim.db`, never into the real history.
-2. Open Ember on the phone. It re-registers for alerts by itself (check Settings says they're on;
-   Send a test if in doubt).
-3. Settings › Alert me when: everything on. On Idle, put **Poultry › Chicken › Whole** on probe 1,
-   then **Fire it up** 10 min with "Then hold pit at 350°". At 20× the scenario then runs by
-   itself, in about 3 minutes:
-   **Fire it up done**, then **Pit is … below target** (the simulated fan is unplugged for a
-   while), **Chicken is at 165°**, **Chicken came off**, and **Grill offline** (a 3-min outage).
-4. Once the grill is back, tap **Stop**: **Looks like you're done** arrives, and about 3 minutes
+   `SIM_SPEED: "20"`), keeping their indentation level with `TZ:`. Save and start it.
+2. **Check it took** before going on: the `ember` log must show
+   `device: simulator (alerts, 20×)`. If it says `device: iKamand at …`, the project is still on
+   the real grill: stop, and fix the YAML. In the app, Settings › Grill › Address reads
+   "Simulator at 20×". Simulated cooks go to `data/ember-sim.db`, never into the real history.
+3. Open Ember on the phone and go to Settings: opening it re-registers the phone with the
+   simulator's database. Check it says alerts are on, and **Send a test**.
+4. Settings › Alert me when: everything on. Then, on Idle:
+   1. Tap the pit target, choose **Roast (350)** and **Set pit to 350°**. The scenario only
+      unplugs the fan once the pit gets near 350°, so the default 225° never gives the pit alert.
+   2. Tap the **Probe 1** card, then the food, and pick **Poultry › Chicken › Whole**.
+   3. **Fire it up**, 10 min, with **Then hold pit at 350°** on. At 20× its countdown takes
+      30 seconds.
+5. The scenario then runs by itself, in about 3 minutes: **Fire it up done**, then
+   **Pit is … below target** (the simulated fan is unplugged for a while), **Chicken is at 165°**,
+   **Chicken came off**, and **Grill offline** (a 3-min outage).
+6. Once the grill is back, tap **Stop**: **Looks like you're done** arrives, and about 3 minutes
    later **Cook ended**. Tap a notification to check it opens Live cook (History for Cook ended).
-5. Stop the project, comment the three lines out again, and start it. Open the app (it
-   re-registers with the real database) and Send a test.
+7. Stop the project, comment the three lines out again, and start it. Check the log says
+   `device: iKamand at …`, then open Settings in the app (it re-registers with the real database)
+   and Send a test.
+
+If nothing arrives, the `ember` log says why: each alert logs an `alert: <title>` line, and each
+push a `push: … sent to web.push.apple.com (201)` or `failed` line. An `alert:` with no `push:`
+after it means the server has no subscription for the phone: open Settings on the phone.
 
 ## Rules while Ember runs on the NAS
 

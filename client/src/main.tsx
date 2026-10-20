@@ -4,7 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { startLive } from "./live.ts";
-import { syncPush } from "./push.ts";
+import { syncPush, syncPushOnResume } from "./push.ts";
 import "./index.css";
 
 const root = document.getElementById("root");
@@ -24,9 +24,11 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/sw.js")
       .then(() => syncPush())
+      .then((error) => error && console.warn("push sync failed:", error))
       .catch((err) => {
         console.warn("service worker registration or push sync failed", err);
       });
+    syncPushOnResume();
   });
 }
 

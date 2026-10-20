@@ -1,10 +1,10 @@
 // Idle / start cook (design/canvas/Idle.dc.html): current readings, the targets Start will use,
 // Fire it up and Start cook. Dimmed with a banner when the grill can't be reached.
 
-import { cToF, foodLabel, type LiveState } from "@ember/shared";
+import { cToF, foodLabel, type LiveState, pitTargetF } from "@ember/shared";
 import type { ReactNode } from "react";
 import { api } from "../api.ts";
-import { countdown, deg, f, presetName } from "../format.ts";
+import { countdown, deg, f, pitDeg, presetName } from "../format.ts";
 import type { Snapshot } from "../live.ts";
 import { navigate } from "../router.ts";
 import { ChevronIcon, FlameIcon } from "../ui/icons.tsx";
@@ -24,7 +24,7 @@ export function Idle({ snap, now }: { snap: Snapshot; now: number }) {
           ? "Not lit"
           : "Fan off";
   const target = live.cook.pitTargetC;
-  const preset = presetName(Math.round(cToF(target)));
+  const preset = presetName(pitTargetF(target));
   const setups = live.probes.filter((p) => p.setup);
   const probeTargets = setups.length
     ? setups.map((p) => `P${p.slot} ${deg(p.setup?.targetC)}`).join(" · ")
@@ -127,7 +127,7 @@ export function Idle({ snap, now }: { snap: Snapshot; now: number }) {
       <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <TargetRow
           label="Pit target"
-          value={`${deg(target)}${preset ? ` · ${preset}` : ""}`}
+          value={`${pitDeg(target)}${preset ? ` · ${preset}` : ""}`}
           onClick={() => navigate({ name: "targets", tab: "pit" })}
         />
         <TargetRow

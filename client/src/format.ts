@@ -1,10 +1,15 @@
 // Display formatting. Temperatures arrive in °C and show in °F, through shared/src/units.ts only.
 
-import { cToDisplayF } from "@ember/shared";
+import { cToDisplayF, pitTargetF } from "@ember/shared";
 
 /** °C → "250" (whole °F), or "—" when there's no reading. */
 export function f(c: number | null | undefined): string {
   return c === null || c === undefined ? "—" : String(cToDisplayF(c));
+}
+
+/** A pit target (device °C) → "350°", in the 5° steps it was picked in (177 °C is 350.6 °F). */
+export function pitDeg(c: number | null | undefined): string {
+  return c === null || c === undefined ? "—" : `${pitTargetF(c)}°`;
 }
 
 /** °C → "250°". */
