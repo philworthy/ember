@@ -111,11 +111,13 @@ doesn't watch or control the grill (any cook carries on to the grill's own end t
 
 1. Container Manager › Project › ember › **Stop**, then edit the YAML and uncomment the three lines
    under "Testing alerts with the simulator" (`USE_SIMULATOR`, `SIM_SCENARIO: alerts`,
-   `SIM_SPEED: "20"`), keeping their indentation level with `TZ:`. Save and start it.
-2. **Check it took** before going on: the `ember` log must show
-   `device: simulator (alerts, 20×)`. If it says `device: iKamand at …`, the project is still on
-   the real grill: stop, and fix the YAML. In the app, Settings › Grill › Address reads
-   "Simulator at 20×". Simulated cooks go to `data/ember-sim.db`, never into the real history.
+   `SIM_SPEED: "20"`), keeping their indentation level with `TZ:`. Save, then **Build** the
+   project. A YAML change only applies when the containers are rebuilt: Stop and Start keep the
+   old environment.
+2. **Check it took** before going on: in the app, Settings › Grill › Address must read
+   "Simulator at 20×". If it shows the grill's IP, the project is still on the real grill: stop
+   it and rebuild. (The `ember` log says `device: simulator (alerts, 20×)` once, at startup.)
+   Simulated cooks go to `data/ember-sim.db`, never into the real history.
 3. Open Ember on the phone and go to Settings: opening it re-registers the phone with the
    simulator's database. Check it says alerts are on, and **Send a test**.
 4. Settings › Alert me when: everything on. Then, on Idle:
@@ -129,9 +131,9 @@ doesn't watch or control the grill (any cook carries on to the grill's own end t
    **Chicken came off**, and **Grill offline** (a 3-min outage).
 6. Once the grill is back, tap **Stop**: **Looks like you're done** arrives, and about 3 minutes
    later **Cook ended**. Tap a notification to check it opens Live cook (History for Cook ended).
-7. Stop the project, comment the three lines out again, and start it. Check the log says
-   `device: iKamand at …`, then open Settings in the app (it re-registers with the real database)
-   and Send a test.
+7. Stop the project, comment the three lines out again, and Build it. Check Settings › Grill ›
+   Address shows the grill's IP again (opening Settings also re-registers the phone with the real
+   database), and Send a test.
 
 If nothing arrives, the `ember` log says why: each alert logs an `alert: <title>` line, and each
 push a `push: … sent to web.push.apple.com (201)` or `failed` line. An `alert:` with no `push:`
