@@ -14,8 +14,9 @@ One milestone per working session or so. Start each in plan mode, and commit whe
 | M4 Live UI | 2026-10-19 | `6b6dc3d` | Phil, simulated cook on Mac and phone |
 | M5 Deploy to the NAS | 2026-10-19 | `5b494ae` | Phil, iPhone over Tailscale with the real grill |
 | M6 Alerts | 2026-10-20 | `80c7b7f`, `718eee6` | Phil, installed iPhone PWA: all six alert types arrived during simulated cooks on the NAS |
+| M7 History | built 2026-10-20 | `c77fac5` | tests and the simulator in a phone-sized browser; waiting on Phil with a real cook on the iPhone |
 
-Next: M7.
+Next: Phil checks M7 with a real cook on the iPhone, then M8.
 
 ## M0 — Scaffold
 Monorepo-lite: `server/`, `client/`, `shared/` (types and unit conversion), `scripts/`. TypeScript,
