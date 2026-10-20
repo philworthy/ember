@@ -129,8 +129,9 @@ doesn't watch or control the grill (any cook carries on to the grill's own end t
 5. The scenario then runs by itself, in about 3 minutes: **Fire it up done**, then
    **Pit is … below target** (the simulated fan is unplugged for a while), **Chicken is at 165°**,
    **Chicken came off**, and **Grill offline** (a 3-min outage).
-6. Once the grill is back, tap **Stop** (not End cook, which ends the cook at once with no
-   alert): **Looks like you're done** arrives, and about 3 minutes later **Cook ended**. Tap a notification to check it opens Live cook (History for Cook ended).
+6. Once the grill is back, open **Fire it up** (Then hold off), **Start**, and tap **Stop** on its
+   countdown screen. That's the app's only Stop: End cook ends the cook at once, with no alert.
+   **Looks like you're done** arrives, and about 3 minutes later **Cook ended**. Tap a notification to check it opens Live cook (History for Cook ended).
 7. Stop the project, comment the three lines out again, and Build it. Check Settings › Grill ›
    Address shows the grill's IP again (opening Settings also re-registers the phone with the real
    database), and Send a test.
